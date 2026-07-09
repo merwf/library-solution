@@ -1,0 +1,18 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<TargetFramework>net8.0</TargetFramework>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+		<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+		<OutputType>Exe</OutputType>
+	</PropertyGroup>
+	<ItemGroup>
+	  <ProjectReference Include="..\LibraryBusiness\LibraryBusiness.csproj" />
+	</ItemGroup>
+	<ItemGroup>
+	  <Folder Include="Properties\" />
+	</ItemGroup>
+	<ItemGroup>
+	  <PackageReference Include="System.Configuration.ConfigurationManager" Version="10.0.9" />
+	</ItemGroup>
+</Project>
