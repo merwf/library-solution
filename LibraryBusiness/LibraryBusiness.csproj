@@ -1,18 +1,18 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-  <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>enable</Nullable>
-  </PropertyGroup>
-  <ItemGroup>
-    <Reference Include="LibraryConfigUtilities">
-      <HintPath>..\..\..\LibraryConfigUtilities.dll</HintPath>
-    </Reference>
-  </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Properties\" />
-  </ItemGroup>
-  <ItemGroup>
-    <PackageReference Include="System.Configuration.ConfigurationManager" Version="10.0.9" />
-  </ItemGroup>
+	<PropertyGroup>
+		<TargetFramework>net8.0</TargetFramework>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\LibrarySolution.DataAccess\LibrarySolution.DataAccess.csproj" />
+		<ProjectReference Include="..\LibrarySolution.Domain\LibrarySolution.Domain.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<Reference Include="LibraryConfigUtilities">
+			<HintPath>C:\Users\E.Merve\Downloads\LibraryConfigUtilities.dll</HintPath>
+		</Reference>
+	</ItemGroup>
 </Project>

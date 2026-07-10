@@ -9,6 +9,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LibraryApplication", "Libra
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LibrarySolution.Tests", "LibrarySolution.Tests\LibrarySolution.Tests.csproj", "{AD344341-D1F9-F6FC-7A41-99632FE2D797}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LibrarySolution.Domain", "LibrarySolution.Domain\LibrarySolution.Domain.csproj", "{0620FADB-0FFF-4392-A2BA-0371639D600B}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LibrarySolution.DataAccess", "LibrarySolution.DataAccess\LibrarySolution.DataAccess.csproj", "{56DD7A4B-7A3F-4B40-87C0-9F6B1BEFC878}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -27,6 +31,14 @@ Global
 		{AD344341-D1F9-F6FC-7A41-99632FE2D797}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{AD344341-D1F9-F6FC-7A41-99632FE2D797}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{AD344341-D1F9-F6FC-7A41-99632FE2D797}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0620FADB-0FFF-4392-A2BA-0371639D600B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0620FADB-0FFF-4392-A2BA-0371639D600B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0620FADB-0FFF-4392-A2BA-0371639D600B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0620FADB-0FFF-4392-A2BA-0371639D600B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{56DD7A4B-7A3F-4B40-87C0-9F6B1BEFC878}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{56DD7A4B-7A3F-4B40-87C0-9F6B1BEFC878}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{56DD7A4B-7A3F-4B40-87C0-9F6B1BEFC878}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{56DD7A4B-7A3F-4B40-87C0-9F6B1BEFC878}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
