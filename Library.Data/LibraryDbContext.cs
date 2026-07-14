@@ -1,8 +1,8 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using LibrarySolution.Domain;
+using Library.Core;
 using LibraryConfigUtilities;
 
-namespace LibrarySolution.DataAccess
+namespace Library.Data
 {
     public class LibraryDbContext : DbContext
     {

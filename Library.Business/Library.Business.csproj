@@ -6,8 +6,8 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\LibrarySolution.DataAccess\LibrarySolution.DataAccess.csproj" />
-		<ProjectReference Include="..\LibrarySolution.Domain\LibrarySolution.Domain.csproj" />
+		<ProjectReference Include="..\Library.Data\Library.Data.csproj" />
+		<ProjectReference Include="..\Library.Core\Library.Core.csproj" />
 	</ItemGroup>
 
 	<ItemGroup>

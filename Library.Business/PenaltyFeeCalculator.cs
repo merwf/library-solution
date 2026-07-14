@@ -4,7 +4,7 @@ using System.Globalization;
 using System.Linq;
 using LibraryConfigUtilities;
 
-namespace LibraryBusiness
+namespace Library.Business
 {
     public class PenaltyFeeCalculator
     {

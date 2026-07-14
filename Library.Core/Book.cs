@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace LibrarySolution.Domain
+namespace Library.Core
 {
     public class Book
     {

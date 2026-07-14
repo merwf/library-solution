@@ -5,10 +5,10 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 #pragma warning disable CA1814 // Prefer jagged arrays over multidimensional
 
-namespace LibrarySolution.DataAccess.Migrations
+namespace Library.Data.Migrations
 {
     /// <inheritdoc />
-    public partial class InitialLibraryDbWithSeedData : Migration
+    public partial class InitialLibraryDbWithNewNamespace : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)

@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace LibrarySolution.Domain
+namespace Library.Core
 {
     public class BorrowRecord
     {
