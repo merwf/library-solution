@@ -1,0 +1,156 @@
+{
+  "info": {
+    "_postman_id": "90463cd7-8434-47bb-9c28-8cd179cb2d4f",
+    "name": "Library API Tests",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "53040771",
+    "_collection_link": "https://go.postman.co/collection/53040771-90463cd7-8434-47bb-9c28-8cd179cb2d4f?source=collection_link"
+  },
+  "item": [
+    {
+      "name": "https://localhost:7083/api/borrow/1/return",
+      "request": {
+        "auth": {
+          "type": "noauth"
+        },
+        "method": "POST",
+        "header": [],
+        "url": {
+          "raw": "https://localhost:7083/api/borrow/1/return",
+          "protocol": "https",
+          "host": [
+            "localhost"
+          ],
+          "port": "7083",
+          "path": [
+            "api",
+            "borrow",
+            "1",
+            "return"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "https://localhost:7083/api/books",
+      "request": {
+        "auth": {
+          "type": "noauth"
+        },
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"title\": \"Tutunamayanlar\",\r\n  \"author\": \"Oğuz Atay\",\r\n  \"isbn\": \"9789754700114\",\r\n  \"isAvailable\": true\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "https://localhost:7083/api/books",
+          "protocol": "https",
+          "host": [
+            "localhost"
+          ],
+          "port": "7083",
+          "path": [
+            "api",
+            "books"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "https://localhost:7083/api/members",
+      "request": {
+        "auth": {
+          "type": "noauth"
+        },
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"fullName\": \"Caner Demir\",\r\n  \"email\": \"caner.demir@gmail.com\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "https://localhost:7083/api/members",
+          "protocol": "https",
+          "host": [
+            "localhost"
+          ],
+          "port": "7083",
+          "path": [
+            "api",
+            "members"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "https://localhost:7083/api/borrow",
+      "request": {
+        "auth": {
+          "type": "noauth"
+        },
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"bookId\": 1,\r\n  \"memberId\": 1,\r\n  \"countryCode\": \"tr-TR\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "https://localhost:7083/api/borrow",
+          "protocol": "https",
+          "host": [
+            "localhost"
+          ],
+          "port": "7083",
+          "path": [
+            "api",
+            "borrow"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "https://localhost:7083/api/borrow/active",
+      "request": {
+        "auth": {
+          "type": "noauth"
+        },
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "https://localhost:7083/api/borrow/active",
+          "protocol": "https",
+          "host": [
+            "localhost"
+          ],
+          "port": "7083",
+          "path": [
+            "api",
+            "borrow",
+            "active"
+          ]
+        }
+      },
+      "response": []
+    }
+  ]
+}
