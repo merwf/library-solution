@@ -188,10 +188,14 @@ https://localhost:{port}/swagger
 
 ### (Opsiyonel) Konsol Uygulamasını Çalıştırma
 
-`PenaltyFeeCalculator` mantığını API'siz, bağımsız test etmek isterseniz:
+`PenaltyFeeCalculator` mantığını API'siz, doğrudan komut satırı (CLI) üzerinden bağımsız test etmek isterseniz projeyi derleyip üretilen yürütülebilir dosyayı (`.exe`) parametrelerle çalıştırabilirsiniz:
 
 ```bash
-dotnet run --project LibraryApplication -- tr-TR 23.11.2009 30.11.2009
+# 1. Projeyi derleyin
+dotnet build LibraryApplication
+
+# 2. Üretilen .exe dosyasını parametrelerle çalıştırın
+.\LibraryApplication\bin\Debug\net8.0\LibraryApplication.exe tr-TR 23.11.2009 01.12.2009
 ```
 
 ---
