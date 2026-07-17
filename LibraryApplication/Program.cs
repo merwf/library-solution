@@ -8,12 +8,6 @@ namespace LibraryApplication
         static void Main(string[] args)
         {
 
-            // GEÇÝCÝ TEST KODU
-            if (args == null || args.Length != 3)
-            {
-                args = new string[] { "tr-TR", "23.11.2009", "01.12.2009" };
-            }
-
             if (args == null || args.Length != 3)
             {
                 PrintUsage();
