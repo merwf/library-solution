@@ -11,13 +11,13 @@ namespace Library.API.Controllers
     public class BorrowController : ControllerBase
     {
         private readonly LibraryDbContext _context;
-        private readonly PenaltyFeeCalculator _calculator;
+        private readonly IPenaltyFeeCalculator _calculator;
 
         // Hem veritabanını hem de senin yazdığın Ceza Hesaplayıcıyı içeri alıyoruz
-        public BorrowController(LibraryDbContext context)
+        public BorrowController(LibraryDbContext context, IPenaltyFeeCalculator calculator)
         {
             _context = context;
-            _calculator = new PenaltyFeeCalculator();
+            _calculator = calculator;
         }
 
         // POST: api/borrow -> Kitap ödünç al (BookId, MemberId, CountryCode)
