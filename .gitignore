@@ -1,4 +1,14 @@
-.vs/
+# Build and Output Folders
 [Bb]in/
 [Oo]bj/
+
+# Visual Studio / IDE Files
+.vs/
+*.suo
 *.user
+*.userosscache
+*.sln.docstates
+
+# Logs and Backup Files
+UpgradeLog.htm
+Backup/
