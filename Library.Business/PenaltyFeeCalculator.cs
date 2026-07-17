@@ -6,12 +6,27 @@ using LibraryConfigUtilities;
 
 namespace Library.Business
 {
-    public class PenaltyFeeCalculator
+    public class PenaltyFeeCalculator : IPenaltyFeeCalculator
     {
         // App.config dosyasýndan gelen konfigürasyon listesi
-        private List<Country> settingList = new LibrarySetting().LibrarySettingList;
+        private List<Country> _settingList;
 
-        public PenaltyFeeCalculator() { }
+        /// <summary>
+        /// Varsayýlan kurucu metot. Konfigürasyon bilgilerini App.config / XML ayarlarýndan otomatik yükler.
+        /// </summary>
+        public PenaltyFeeCalculator() 
+        {
+            _settingList = new LibrarySetting().LibrarySettingList;
+        }
+
+        /// <summary>
+        /// Unit Test veya baðýmsýz senaryolar için dýþarýdan özel ülke konfigürasyon listesi enjekte edilmesini saðlayan kurucu metot.
+        /// </summary>
+        /// <param name="settingList">Hesaplamalarda kullanýlacak özel ülke ve kural listesi.</param>
+        public PenaltyFeeCalculator(List<Country> settingList)
+        {
+            _settingList = settingList ?? new LibrarySetting().LibrarySettingList;
+        }
 
         /// <summary>
         /// Ülke kodu ve tarih aralýðýna göre toplam cezayý hesaplar.
@@ -19,7 +34,7 @@ namespace Library.Business
         public string Calculate(string countryCode, string startDateStr, string endDateStr)
         {
             // 1. Ülke konfigürasyonunu Culture özelliðine göre buluyoruz
-            var countrySetting = settingList.FirstOrDefault(c =>
+            var countrySetting = _settingList.FirstOrDefault(c =>
                 c.Culture.Equals(countryCode, StringComparison.OrdinalIgnoreCase));
 
             if (countrySetting == null)

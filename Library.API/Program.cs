@@ -1,3 +1,4 @@
+using Library.Business;
 using Library.Data;
 using Microsoft.EntityFrameworkCore;
 
@@ -9,6 +10,9 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddDbContext<LibraryDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 // ------------------------------------------------
+
+// Business Servislerinin Eklenmesi (Dependency Injection)
+builder.Services.AddScoped<IPenaltyFeeCalculator, PenaltyFeeCalculator>();
 
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
