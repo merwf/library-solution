@@ -79,9 +79,13 @@ namespace Library.API.Controllers
             {
                 // Örn: "5,25 TRY" ifadesindeki sayı kısmını ayıklayıp decimal'e çevirme simülasyonu
                 var parts = penaltyResult.Split(' ');
-                if (parts.Length > 0 && decimal.TryParse(parts[0], out decimal fee))
+                if (parts.Length > 0)
                 {
-                    record.ComputedPenaltyFee = fee;
+                    var culture = new System.Globalization.CultureInfo(record.CountryCode);
+                    if (decimal.TryParse(parts[0], System.Globalization.NumberStyles.Any, culture, out decimal fee))
+                    {
+                        record.ComputedPenaltyFee = fee;
+                    }
                 }
             }
 
