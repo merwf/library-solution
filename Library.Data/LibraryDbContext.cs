@@ -16,11 +16,7 @@ namespace Library.Data
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
-            if (!optionsBuilder.IsConfigured)
-            {
-                // LocalDB üzerinde kütüphane otomasyonu için connection string ayarlıyoruz
-                optionsBuilder.UseSqlServer("Server=(localdb)\\MSSQLLocalDB;Database=LibraryAutomationDb;Trusted_Connection=True;TrustServerCertificate=True;");
-            }
+            if (!optionsBuilder.IsConfigured) {}
         }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
