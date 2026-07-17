@@ -73,11 +73,11 @@ namespace LibrarySolution.Tests
             string countryCode = "ar-AE";
             string startDate = "16.11.2009";
             string endDate = "23.11.2009";
+            string expected = "16.00 AED";
 
             string result = _calculator.Calculate(countryCode, startDate, endDate);
 
-            Assert.Contains("16", result);
-            Assert.Contains("AED", result);
+            Assert.Equal(expected, result);
         }
 
         [Fact]
@@ -126,6 +126,20 @@ namespace LibrarySolution.Tests
             string startDate = "21.11.2009";
             string endDate = "22.11.2009";
             string expected = "0.00 TRY";
+
+            string result = _calculator.Calculate(countryCode, startDate, endDate);
+
+            Assert.Equal(expected, result);
+        }
+
+        [Fact]
+        public void Calculate_AE_HolidayAndWeekendOverlap_CalculatesCorrectly()
+        {
+            // BAE için Cuma-Cumartesi hafta sonu ve 25-26-27 Kasım tatillerini içeren senaryo
+            string countryCode = "ar-AE";
+            string startDate = "16.11.2009";
+            string endDate = "30.11.2009";
+            string expected = "40.00 AED";
 
             string result = _calculator.Calculate(countryCode, startDate, endDate);
 
