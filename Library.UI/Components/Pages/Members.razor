@@ -1,0 +1,89 @@
+﻿@page "/members"
+@using Library.Core
+@using Library.UI.Services
+@inject IMemberService MemberService
+
+<div class="container mt-4">
+    <div class="row">
+        <!-- Sol Taraf: Üye Ekleme Formu -->
+        <div class="col-md-4 mb-4">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white"><h5>Yeni Üye Kaydı</h5></div>
+                <div class="card-body">
+                    <EditForm Model="newMember" OnValidSubmit="HandleAddMember">
+                        <DataAnnotationsValidator />
+                        <div class="mb-3">
+                            <label class="form-label">Adı Soyadı</label>
+                            <InputText class="form-control" @bind-Value="newMember.FullName" />
+                            <ValidationMessage For="() => newMember.FullName" class="text-danger" />
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">E-Posta</label>
+                            <InputText class="form-control" @bind-Value="newMember.Email" />
+                            <ValidationMessage For="() => newMember.Email" class="text-danger" />
+                        </div>
+                        <button type="submit" class="btn btn-success w-100">Kayıt Ekle</button>
+                    </EditForm>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sağ Taraf: Üye Listesi -->
+        <div class="col-md-8">
+            <h3>Üye Listesi</h3>
+            @if (members == null)
+            {
+                <div class="spinner-border text-primary" role="status"></div>
+            }
+            else
+            {
+                <table class="table table-bordered table-striped">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>ID</th>
+                            <th>Adı Soyadı</th>
+                            <th>E-Posta</th>
+                            <th>Kayıt Tarihi</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var member in members)
+                        {
+                            <tr>
+                                <td>@member.Id</td>
+                                <td>@member.FullName</td>
+                                <td>@member.Email</td>
+                                <td>@member.MembershipDate.ToString("dd.MM.yyyy")</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+        </div>
+    </div>
+</div>
+
+@code {
+    private List<MemberDto>? members;
+    private MemberDto newMember = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await RefreshList();
+    }
+
+    private async Task RefreshList()
+    {
+        members = await MemberService.GetMembersAsync();
+    }
+
+    private async Task HandleAddMember()
+    {
+        var success = await MemberService.AddMemberAsync(newMember);
+        if (success)
+        {
+            newMember = new();
+            await RefreshList();
+        }
+    }
+}

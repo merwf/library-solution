@@ -11,6 +11,8 @@ builder.Services.AddScoped(sp => new HttpClient
 });
 
 builder.Services.AddScoped<IBookService, BookService>();
+builder.Services.AddScoped<IMemberService, MemberService>();
+builder.Services.AddScoped<IBorrowService, BorrowService>();
 
 // Add services to the container.
 builder.Services.AddRazorComponents()

@@ -1,0 +1,86 @@
+﻿@page "/active-borrows"
+@using Library.Core
+@using Library.UI.Services
+@inject IBorrowService BorrowService
+
+<div class="container mt-4">
+    <h3>Aktif Ödünç Kayıtları ve İade Yönetimi</h3>
+
+    @if (penaltyResult != null)
+    {
+        <div class="alert alert-info alert-dismissible fade show" role="alert">
+            <h5><strong>İade İşlemi Tamamlandı!</strong></h5>
+            <p>Hesaplanan Ceza Durumu: <strong>@penaltyResult</strong></p>
+            <button type="button" class="btn-close" @onclick="() => penaltyResult = null"></button>
+        </div>
+    }
+
+    @if (activeBorrows == null)
+    {
+        <div class="spinner-border text-primary" role="status"></div>
+    }
+    else if (!activeBorrows.Any())
+    {
+        <div class="alert alert-warning">Şu anda ödünçte olan hiç kitap bulunmamaktadır.</div>
+    }
+    else
+    {
+        <table class="table table-bordered table-striped table-hover">
+            <thead class="table-dark">
+                <tr>
+                    <th>Kayıt ID</th>
+                    <th>Kitap Adı</th>
+                    <th>Üye Adı</th>
+                    <th>Ödünç Tarihi</th>
+                    <th>Son Teslim Tarihi</th>
+                    <th>Ülke</th>
+                    <th>İşlem</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var record in activeBorrows)
+                {
+                    <tr>
+                        <td>@record.Id</td>
+                        <td>@record.BookTitle</td>
+                        <td>@record.MemberName</td>
+                        <td>@record.BorrowDate.ToString("dd.MM.yyyy")</td>
+                        <td>@record.DueDate.ToString("dd.MM.yyyy")</td>
+                        <td><span class="badge bg-secondary">@record.CountryCode</span></td>
+                        <td>
+                            <button class="btn btn-warning btn-sm" @onclick="() => HandleReturn(record.Id)">
+                                İade Al ve Ceza Hesapla
+                            </button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+</div>
+
+@code {
+    private List<BorrowRecordDto>? activeBorrows;
+    private string? penaltyResult;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await RefreshList();
+    }
+
+    private async Task RefreshList()
+    {
+        activeBorrows = await BorrowService.GetActiveBorrowsAsync();
+    }
+
+    private async Task HandleReturn(int recordId)
+    {
+        penaltyResult = null;
+        // API'ye iade isteği atıp backend'deki ceza hesaplayıcı sonucunu alıyoruz
+        string result = await BorrowService.ReturnBookAsync(recordId);
+        penaltyResult = result;
+
+        // Listeyi güncelliyoruz (İade edilen kitap listeden düşecek)
+        await RefreshList();
+    }
+}
