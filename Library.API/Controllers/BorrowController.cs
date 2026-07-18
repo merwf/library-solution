@@ -106,6 +106,7 @@ namespace Library.API.Controllers
         }
 
         // GET: api/borrow/active -> Aktif ödünç kayıtlarını listele (ReturnDate'i boş olanlar)
+        [HttpGet("active")]
         public async Task<ActionResult<IEnumerable<BorrowRecordDto>>> GetActiveBorrows()
         {
             var activeBorrows = await _context.BorrowRecords

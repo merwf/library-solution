@@ -1,0 +1,75 @@
+﻿@page "/books"
+@using Library.Core
+@using System.Net.Http.Json
+@inject HttpClient Http
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h3>Kitap Listesi</h3>
+    </div>
+
+    @if (books == null)
+    {
+        <div class="d-flex justify-content-center">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Yükleniyor...</span>
+            </div>
+        </div>
+    }
+    else if (!books.Any())
+    {
+        <div class="alert alert-warning">Sistemde kayıtlı kitap bulunamadı.</div>
+    }
+    else
+    {
+        <table class="table table-bordered table-striped table-hover">
+            <thead class="table-dark">
+                <tr>
+                    <th>ID</th>
+                    <th>Kitap Adı</th>
+                    <th>Yazar</th>
+                    <th>ISBN</th>
+                    <th>Durum</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var book in books)
+                {
+                    <tr>
+                        <td>@book.Id</td>
+                        <td>@book.Title</td>
+                        <td>@book.Author</td>
+                        <td>@book.ISBN</td>
+                        <td>
+                            @if (book.IsAvailable)
+                            {
+                                <span class="badge bg-success">Mevcut</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-danger">Ödünçte</span>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+</div>
+
+@code {
+    private List<BookDto>? books;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            books = await Http.GetFromJsonAsync<List<BookDto>>("api/books");
+        }
+        catch (Exception ex)
+        {
+            books = new List<BookDto>();
+            Console.WriteLine($"API hatası: {ex.Message}");
+        }
+    }
+}
