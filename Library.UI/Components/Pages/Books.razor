@@ -1,24 +1,19 @@
 ﻿@page "/books"
 @using Library.Core
-@using System.Net.Http.Json
-@inject HttpClient Http
+@using Library.UI.Services
+@inject IBookService BookService
 
 <div class="container mt-4">
     <div class="d-flex justify-content-between align-items-center mb-3">
-        <h3>Kitap Listesi</h3>
+        <h3>Kitap Yönetim Paneli</h3>
+        <button class="btn btn-primary" @onclick="OpenAddModal">Yeni Kitap Ekle</button>
     </div>
 
     @if (books == null)
     {
         <div class="d-flex justify-content-center">
-            <div class="spinner-border text-primary" role="status">
-                <span class="visually-hidden">Yükleniyor...</span>
-            </div>
+            <div class="spinner-border text-primary" role="status"></div>
         </div>
-    }
-    else if (!books.Any())
-    {
-        <div class="alert alert-warning">Sistemde kayıtlı kitap bulunamadı.</div>
     }
     else
     {
@@ -30,6 +25,7 @@
                     <th>Yazar</th>
                     <th>ISBN</th>
                     <th>Durum</th>
+                    <th>İşlemler</th>
                 </tr>
             </thead>
             <tbody>
@@ -37,17 +33,51 @@
                 {
                     <tr>
                         <td>@book.Id</td>
-                        <td>@book.Title</td>
-                        <td>@book.Author</td>
-                        <td>@book.ISBN</td>
                         <td>
-                            @if (book.IsAvailable)
+                            @if (editingBookId == book.Id)
                             {
-                                <span class="badge bg-success">Mevcut</span>
+                                <input type="text" class="form-control form-control-sm" @bind="editingBook.Title" />
                             }
                             else
                             {
-                                <span class="badge bg-danger">Ödünçte</span>
+                                @book.Title
+                            }
+                        </td>
+                        <td>
+                            @if (editingBookId == book.Id)
+                            {
+                                <input type="text" class="form-control form-control-sm" @bind="editingBook.Author" />
+                            }
+                            else
+                            {
+                                @book.Author
+                            }
+                        </td>
+                        <td>
+                            @if (editingBookId == book.Id)
+                            {
+                                <input type="text" class="form-control form-control-sm" @bind="editingBook.ISBN" />
+                            }
+                            else
+                            {
+                                @book.ISBN
+                            }
+                        </td>
+                        <td>
+                            <span class="badge @(book.IsAvailable ? "bg-success" : "bg-danger")">
+                                @(book.IsAvailable ? "Mevcut" : "Ödünçte")
+                            </span>
+                        </td>
+                        <td>
+                            @if (editingBookId == book.Id)
+                            {
+                                <button class="btn btn-success btn-sm" @onclick="() => SaveRow(book)">Kaydet</button>
+                                <button class="btn btn-secondary btn-sm" @onclick="CancelEdit">İptal</button>
+                            }
+                            else
+                            {
+                                <button class="btn btn-warning btn-sm" @onclick="() => StartEdit(book)">Düzenle</button>
+                                <button class="btn btn-danger btn-sm" @onclick="() => PromptDelete(book)">Sil</button>
                             }
                         </td>
                     </tr>
@@ -57,19 +87,146 @@
     }
 </div>
 
+<!-- YENİ KİTAP EKLEME MODAL PANELİ -->
+@if (showAddModal)
+{
+    <div class="modal fade show d-block" tabindex="-1" style="background: rgba(0,0,0,0.5);">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Yeni Kitap Ekle</h5>
+                    <button type="button" class="btn-close" @onclick="CloseAddModal"></button>
+                </div>
+                <EditForm Model="newBook" OnValidSubmit="HandleAddBook">
+                    <DataAnnotationsValidator />
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label">Kitap Adı</label>
+                            <InputText class="form-control" @bind-Value="newBook.Title" />
+                            <ValidationMessage For="() => newBook.Title" class="text-danger" />
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Yazar</label>
+                            <InputText class="form-control" @bind-Value="newBook.Author" />
+                            <ValidationMessage For="() => newBook.Author" class="text-danger" />
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">ISBN</label>
+                            <InputText class="form-control" @bind-Value="newBook.ISBN" />
+                            <ValidationMessage For="() => newBook.ISBN" class="text-danger" />
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" @onclick="CloseAddModal">Vazgeç</button>
+                        <button type="submit" class="btn btn-primary">Ekle</button>
+                    </div>
+                </EditForm>
+            </div>
+        </div>
+    </div>
+}
+
+<!-- SİLME ONAY DIALOGU -->
+@if (showDeleteDialog)
+{
+    <div class="modal fade show d-block" tabindex="-1" style="background: rgba(0,0,0,0.5);">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title">Kayıt Silme Onayı</h5>
+                    <button type="button" class="btn-close" @onclick="CancelDelete"></button>
+                </div>
+                <div class="modal-body">
+                    <p><strong>"@selectedBookForDelete?.Title"</strong> isimli kitabı sistemden silmek istediğinize emin misiniz?</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" @onclick="CancelDelete">Vazgeç</button>
+                    <button type="button" class="btn btn-danger" @onclick="ConfirmDelete">Evet, Sil</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
 @code {
     private List<BookDto>? books;
+    private BookDto newBook = new();
+    private BookDto editingBook = new();
+
+    private bool showAddModal = false;
+    private bool showDeleteDialog = false;
+    private int editingBookId = 0;
+    private BookDto? selectedBookForDelete;
 
     protected override async Task OnInitializedAsync()
     {
-        try
+        await RefreshList();
+    }
+
+    private async Task RefreshList()
+    {
+        books = await BookService.GetBooksAsync();
+    }
+
+    private void OpenAddModal() { newBook = new(); showAddModal = true; }
+    private void CloseAddModal() => showAddModal = false;
+
+    private async Task HandleAddBook()
+    {
+        var success = await BookService.AddBookAsync(newBook);
+        if (success)
         {
-            books = await Http.GetFromJsonAsync<List<BookDto>>("api/books");
+            showAddModal = false;
+            await RefreshList();
         }
-        catch (Exception ex)
+    }
+
+    private void StartEdit(BookDto book)
+    {
+        editingBookId = book.Id;
+        editingBook = new BookDto
         {
-            books = new List<BookDto>();
-            Console.WriteLine($"API hatası: {ex.Message}");
+            Id = book.Id,
+            Title = book.Title,
+            Author = book.Author,
+            ISBN = book.ISBN,
+            IsAvailable = book.IsAvailable
+        };
+    }
+
+    private void CancelEdit() => editingBookId = 0;
+
+    private async Task SaveRow(BookDto originalBook)
+    {
+        if (string.IsNullOrWhiteSpace(editingBook.Title) || string.IsNullOrWhiteSpace(editingBook.Author) || string.IsNullOrWhiteSpace(editingBook.ISBN))
+            return;
+
+        var success = await BookService.UpdateBookAsync(originalBook.Id, editingBook);
+        if (success)
+        {
+            editingBookId = 0;
+            await RefreshList();
+        }
+    }
+
+    private void PromptDelete(BookDto book)
+    {
+        selectedBookForDelete = book;
+        showDeleteDialog = true;
+    }
+
+    private void CancelDelete() => showDeleteDialog = false;
+
+    private async Task ConfirmDelete()
+    {
+        if (selectedBookForDelete != null)
+        {
+            var success = await BookService.DeleteBookAsync(selectedBookForDelete.Id);
+            if (success)
+            {
+                showDeleteDialog = false;
+                await RefreshList();
+            }
         }
     }
 }
