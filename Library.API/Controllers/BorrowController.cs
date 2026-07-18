@@ -106,24 +106,37 @@ namespace Library.API.Controllers
         }
 
         // GET: api/borrow/active -> Aktif ödünç kayıtlarını listele (ReturnDate'i boş olanlar)
-        [HttpGet("active")]
-        public async Task<ActionResult<IEnumerable<BorrowRecord>>> GetActiveBorrows()
+        public async Task<ActionResult<IEnumerable<BorrowRecordDto>>> GetActiveBorrows()
         {
             var activeBorrows = await _context.BorrowRecords
                 .Where(br => br.ReturnDate == null)
                 .Include(br => br.Book)
                 .Include(br => br.Member)
+                .Select(br => new BorrowRecordDto
+                {
+                    Id = br.Id,
+                    BookId = br.BookId,
+                    BookTitle = br.Book != null ? br.Book.Title : string.Empty,
+                    MemberId = br.MemberId,
+                    MemberName = br.Member != null ? br.Member.FullName : string.Empty,
+                    BorrowDate = br.BorrowDate,
+                    DueDate = br.DueDate,
+                    ReturnDate = br.ReturnDate,
+                    CountryCode = br.CountryCode,
+                    ComputedPenaltyFee = br.ComputedPenaltyFee,
+                    IsPenaltyPaid = br.IsPenaltyPaid
+                })
                 .ToListAsync();
 
             return Ok(activeBorrows);
         }
-    }
 
-    // İstek gövdesini (JSON body) düzgün karşılayabilmek için yardımcı DTO sınıfı
-    public class BorrowRequestDto
-    {
-        public int BookId { get; set; }
-        public int MemberId { get; set; }
-        public string CountryCode { get; set; } = string.Empty; // tr-TR veya ar-AE
+        // İstek gövdesini (JSON body) düzgün karşılayabilmek için yardımcı DTO sınıfı
+        public class BorrowRequestDto
+        {
+            public int BookId { get; set; }
+            public int MemberId { get; set; }
+            public string CountryCode { get; set; } = string.Empty; // tr-TR veya ar-AE
+        }
     }
 }
