@@ -4,68 +4,107 @@
 @inject IMemberService MemberService
 
 <div class="container mt-4">
-    <div class="row">
-        <!-- Sol Taraf: Üye Ekleme Formu -->
-        <div class="col-md-4 mb-4">
-            <div class="card shadow-sm">
-                <div class="card-header bg-primary text-white"><h5>Yeni Üye Kaydı</h5></div>
-                <div class="card-body">
-                    <EditForm Model="newMember" OnValidSubmit="HandleAddMember">
-                        <DataAnnotationsValidator />
-                        <div class="mb-3">
-                            <label class="form-label">Adı Soyadı</label>
-                            <InputText class="form-control" @bind-Value="newMember.FullName" />
+    <!-- Üst Başlık ve Yeni Üye Ekleme Butonu -->
+    <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-2">
+        <h3>Üye Yönetim Paneli</h3>
+        <button class="btn btn-dark" @onclick="() => showAddPanel = !showAddPanel">
+            @(showAddPanel ? "Formu Kapat" : "Yeni Üye Ekle")
+        </button>
+    </div>
+
+    <!-- Üye Ekleme Formu (Koyu Lacivert / Siyah Kurumsal Tema) -->
+    @if (showAddPanel)
+    {
+        <div class="card shadow mb-4 border-0">
+            <div class="card-header bg-dark text-white fw-bold py-3" style="background-color: #212529 !important;">
+                <h5 class="mb-0">Yeni Üye Kayıt Formu</h5>
+            </div>
+            <div class="card-body border border-top-0 rounded-bottom">
+                <EditForm Model="newMember" OnValidSubmit="HandleAddMember">
+                    <DataAnnotationsValidator />
+                    <div class="row g-3">
+                        <div class="col-md-5">
+                            <label class="form-label fw-semibold">Adı Soyadı</label>
+                            <InputText class="form-control" @bind-Value="newMember.FullName" placeholder="Merve Gazioğlu" />
                             <ValidationMessage For="() => newMember.FullName" class="text-danger" />
                         </div>
-                        <div class="mb-3">
-                            <label class="form-label">E-Posta</label>
-                            <InputText class="form-control" @bind-Value="newMember.Email" />
+                        <div class="col-md-5">
+                            <label class="form-label fw-semibold">E-Posta Adresi</label>
+                            <InputText class="form-control" @bind-Value="newMember.Email" placeholder="ornek@kocaeli.edu.tr" />
                             <ValidationMessage For="() => newMember.Email" class="text-danger" />
                         </div>
-                        <button type="submit" class="btn btn-success w-100">Kayıt Ekle</button>
-                    </EditForm>
-                </div>
+                        <div class="col-md-2 d-flex align-items-end">
+                            <button type="submit" class="btn btn-primary w-100" style="background-color: #0d6efd; border: none;">Kaydet</button>
+                        </div>
+                    </div>
+                </EditForm>
             </div>
         </div>
+    }
 
-        <!-- Sağ Taraf: Üye Listesi -->
-        <div class="col-md-8">
-            <h3>Üye Listesi</h3>
-            @if (members == null)
-            {
-                <div class="spinner-border text-primary" role="status"></div>
-            }
-            else
-            {
-                <table class="table table-bordered table-striped">
-                    <thead class="table-dark">
+    <!-- Arama ve Filtreleme Paneli -->
+    <div class="card mb-3 bg-light border">
+        <div class="card-body row g-2">
+            <div class="col-md-6">
+                <input type="text" class="form-control" placeholder="Ad Soyad ile ara..." @bind="searchName" @bind:event="oninput" />
+            </div>
+            <div class="col-md-6">
+                <input type="text" class="form-control" placeholder="E-Posta ile ara..." @bind="searchEmail" @bind:event="oninput" />
+            </div>
+        </div>
+    </div>
+
+    <!-- Üye Listesi Tablosu -->
+    @if (members == null)
+    {
+        <div class="d-flex justify-content-center py-4">
+            <div class="spinner-border text-primary" role="status"></div>
+        </div>
+    }
+    else
+    {
+        <div class="table-responsive shadow-sm rounded">
+            <table class="table table-bordered table-striped table-hover mb-0">
+                <thead class="table-dark">
+                    <tr>
+                        <th style="width: 80px;">ID</th>
+                        <th>Adı Soyadı</th>
+                        <th>E-Posta Adresi</th>
+                        <th style="width: 150px;">Kayıt Tarihi</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (!FilteredMembers.Any())
+                    {
                         <tr>
-                            <th>ID</th>
-                            <th>Adı Soyadı</th>
-                            <th>E-Posta</th>
-                            <th>Kayıt Tarihi</th>
+                            <td colspan="4" class="text-center text-muted py-3">Aranan kriterlere uygun üye bulunamadı.</td>
                         </tr>
-                    </thead>
-                    <tbody>
-                        @foreach (var member in members)
+                    }
+                    else
+                    {
+                        @foreach (var member in FilteredMembers)
                         {
                             <tr>
                                 <td>@member.Id</td>
-                                <td>@member.FullName</td>
+                                <td class="fw-semibold">@member.FullName</td>
                                 <td>@member.Email</td>
                                 <td>@member.MembershipDate.ToString("dd.MM.yyyy")</td>
                             </tr>
                         }
-                    </tbody>
-                </table>
-            }
+                    }
+                </tbody>
+            </table>
         </div>
-    </div>
+    }
 </div>
 
 @code {
     private List<MemberDto>? members;
     private MemberDto newMember = new();
+    private bool showAddPanel = false;
+
+    private string searchName = "";
+    private string searchEmail = "";
 
     protected override async Task OnInitializedAsync()
     {
@@ -83,7 +122,21 @@
         if (success)
         {
             newMember = new();
+            showAddPanel = false;
             await RefreshList();
+        }
+    }
+
+    private IEnumerable<MemberDto> FilteredMembers
+    {
+        get
+        {
+            if (members == null) return Enumerable.Empty<MemberDto>();
+
+            return members.Where(m =>
+                (string.IsNullOrEmpty(searchName) || m.FullName.Contains(searchName, StringComparison.OrdinalIgnoreCase)) &&
+                (string.IsNullOrEmpty(searchEmail) || m.Email.Contains(searchEmail, StringComparison.OrdinalIgnoreCase))
+            );
         }
     }
 }
