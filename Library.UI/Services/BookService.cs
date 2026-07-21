@@ -17,14 +17,10 @@ namespace Library.UI.Services
 
         public async Task<List<BookDto>> GetBooksAsync()
         {
-            try
-            {
-                return await _http.GetFromJsonAsync<List<BookDto>>("api/books") ?? new List<BookDto>();
-            }
-            catch
-            {
-                return new List<BookDto>();
-            }
+            // Not: Hata burada yutulmuyor. API'ye ulaşılamazsa exception sayfaya (Books.razor)
+            // gider; sayfa bunu yakalayıp kullanıcıya anlamlı bir hata mesajı gösterir.
+            // Aksi halde "liste boş" ile "API'ye ulaşılamadı" durumları ayırt edilemezdi.
+            return await _http.GetFromJsonAsync<List<BookDto>>("api/books") ?? new List<BookDto>();
         }
 
         public async Task<bool> AddBookAsync(BookDto book)

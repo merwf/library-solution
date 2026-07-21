@@ -2,6 +2,7 @@
 @using Library.Core
 @using Library.UI.Services
 @inject IBorrowService BorrowService
+@inject IToastService Toast
 
 <div class="container mt-4">
     <h3>Aktif Ödünç Kayıtları ve İade Yönetimi</h3>
@@ -15,11 +16,21 @@
         </div>
     }
 
-    @if (activeBorrows == null)
+    @if (isLoading)
     {
-        <div class="spinner-border text-primary" role="status"></div>
+        <div class="d-flex justify-content-center align-items-center gap-2 py-4">
+            <div class="spinner-border text-primary" role="status"></div>
+            <span>Yükleniyor...</span>
+        </div>
     }
-    else if (!activeBorrows.Any())
+    else if (loadError != null)
+    {
+        <div class="alert alert-danger d-flex justify-content-between align-items-center">
+            <span>@loadError</span>
+            <button class="btn btn-sm btn-outline-danger" @onclick="RefreshList">Tekrar Dene</button>
+        </div>
+    }
+    else if (activeBorrows == null || !activeBorrows.Any())
     {
         <div class="alert alert-warning">Şu anda ödünçte olan hiç kitap bulunmamaktadır.</div>
     }
@@ -48,8 +59,16 @@
                         <td>@record.DueDate.ToString("dd.MM.yyyy")</td>
                         <td><span class="badge bg-secondary">@record.CountryCode</span></td>
                         <td>
-                            <button class="btn btn-warning btn-sm" @onclick="() => HandleReturn(record.Id)">
-                                İade Al ve Ceza Hesapla
+                            <button class="btn btn-warning btn-sm" @onclick="() => HandleReturn(record.Id)" disabled="@(processingId == record.Id)">
+                                @if (processingId == record.Id)
+                                {
+                                    <span class="spinner-border spinner-border-sm me-1"></span>
+                                    <text>İşleniyor...</text>
+                                }
+                                else
+                                {
+                                    <text>İade Al ve Ceza Hesapla</text>
+                                }
                             </button>
                         </td>
                     </tr>
@@ -62,6 +81,9 @@
 @code {
     private List<BorrowRecordDto>? activeBorrows;
     private string? penaltyResult;
+    private bool isLoading = true;
+    private string? loadError;
+    private int? processingId;
 
     protected override async Task OnInitializedAsync()
     {
@@ -70,17 +92,52 @@
 
     private async Task RefreshList()
     {
-        activeBorrows = await BorrowService.GetActiveBorrowsAsync();
+        isLoading = true;
+        loadError = null;
+        try
+        {
+            activeBorrows = await BorrowService.GetActiveBorrowsAsync();
+        }
+        catch (Exception)
+        {
+            loadError = "Aktif ödünç kayıtları yüklenirken bir hata oluştu. Lütfen API bağlantısını kontrol edip tekrar deneyin.";
+            activeBorrows = new List<BorrowRecordDto>();
+        }
+        finally
+        {
+            isLoading = false;
+        }
     }
 
     private async Task HandleReturn(int recordId)
     {
         penaltyResult = null;
-        // API'ye iade isteği atıp backend'deki ceza hesaplayıcı sonucunu alıyoruz
-        string result = await BorrowService.ReturnBookAsync(recordId);
-        penaltyResult = result;
+        processingId = recordId;
+        try
+        {
+            // API'ye iade isteği atıp backend'deki ceza hesaplayıcı sonucunu alıyoruz
+            string result = await BorrowService.ReturnBookAsync(recordId);
 
-        // Listeyi güncelliyoruz (İade edilen kitap listeden düşecek)
-        await RefreshList();
+            if (result.StartsWith("Hata"))
+            {
+                Toast.ShowError(result);
+            }
+            else
+            {
+                penaltyResult = result;
+                Toast.ShowSuccess("Kitap başarıyla iade alındı.");
+            }
+
+            // Listeyi güncelliyoruz (İade edilen kitap listeden düşecek)
+            await RefreshList();
+        }
+        catch (Exception)
+        {
+            Toast.ShowError("Sunucuya ulaşılamadı. İade işlemi gerçekleştirilemedi.");
+        }
+        finally
+        {
+            processingId = null;
+        }
     }
 }

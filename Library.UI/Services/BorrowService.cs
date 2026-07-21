@@ -17,14 +17,8 @@ namespace Library.UI.Services
 
         public async Task<List<BorrowRecordDto>> GetActiveBorrowsAsync()
         {
-            try
-            {
-                return await _http.GetFromJsonAsync<List<BorrowRecordDto>>("api/borrow/active") ?? new List<BorrowRecordDto>();
-            }
-            catch
-            {
-                return new List<BorrowRecordDto>();
-            }
+            // Hata sayfada yakalanıp gösterilecek (bkz. ActiveBorrows.razor RefreshList).
+            return await _http.GetFromJsonAsync<List<BorrowRecordDto>>("api/borrow/active") ?? new List<BorrowRecordDto>();
         }
 
         public async Task<bool> BorrowBookAsync(object borrowRequest)

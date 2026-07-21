@@ -2,18 +2,31 @@
 @using Library.Core
 @using Library.UI.Services
 @inject IBookService BookService
+@inject IToastService Toast
 
 <div class="container mt-4">
     <div class="d-flex justify-content-between align-items-center mb-3">
         <h3>Kitap Yönetim Paneli</h3>
-        <button class="btn btn-primary" @onclick="OpenAddModal">Yeni Kitap Ekle</button>
+        <button class="btn btn-primary" @onclick="OpenAddModal" disabled="@isBusy">Yeni Kitap Ekle</button>
     </div>
 
-    @if (books == null)
+    @if (isLoading)
     {
-        <div class="d-flex justify-content-center">
+        <div class="d-flex justify-content-center align-items-center gap-2 py-4">
             <div class="spinner-border text-primary" role="status"></div>
+            <span>Yükleniyor...</span>
         </div>
+    }
+    else if (loadError != null)
+    {
+        <div class="alert alert-danger d-flex justify-content-between align-items-center">
+            <span>@loadError</span>
+            <button class="btn btn-sm btn-outline-danger" @onclick="RefreshList">Tekrar Dene</button>
+        </div>
+    }
+    else if (books == null || !books.Any())
+    {
+        <div class="alert alert-secondary text-center">Kayıt bulunamadı.</div>
     }
     else
     {
@@ -71,13 +84,15 @@
                         <td>
                             @if (editingBookId == book.Id)
                             {
-                                <button class="btn btn-success btn-sm" @onclick="() => SaveRow(book)">Kaydet</button>
-                                <button class="btn btn-secondary btn-sm" @onclick="CancelEdit">İptal</button>
+                                <button class="btn btn-success btn-sm" @onclick="() => SaveRow(book)" disabled="@isBusy">
+                                    @(isBusy ? "Kaydediliyor..." : "Kaydet")
+                                </button>
+                                <button class="btn btn-secondary btn-sm" @onclick="CancelEdit" disabled="@isBusy">İptal</button>
                             }
                             else
                             {
-                                <button class="btn btn-warning btn-sm" @onclick="() => StartEdit(book)">Düzenle</button>
-                                <button class="btn btn-danger btn-sm" @onclick="() => PromptDelete(book)">Sil</button>
+                                <button class="btn btn-warning btn-sm" @onclick="() => StartEdit(book)" disabled="@isBusy">Düzenle</button>
+                                <button class="btn btn-danger btn-sm" @onclick="() => PromptDelete(book)" disabled="@isBusy">Sil</button>
                             }
                         </td>
                     </tr>
@@ -117,8 +132,10 @@
                         </div>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" @onclick="CloseAddModal">Vazgeç</button>
-                        <button type="submit" class="btn btn-primary">Ekle</button>
+                        <button type="button" class="btn btn-secondary" @onclick="CloseAddModal" disabled="@isBusy">Vazgeç</button>
+                        <button type="submit" class="btn btn-primary" disabled="@isBusy">
+                            @(isBusy ? "Ekleniyor..." : "Ekle")
+                        </button>
                     </div>
                 </EditForm>
             </div>
@@ -140,8 +157,10 @@
                     <p><strong>"@selectedBookForDelete?.Title"</strong> isimli kitabı sistemden silmek istediğinize emin misiniz?</p>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" @onclick="CancelDelete">Vazgeç</button>
-                    <button type="button" class="btn btn-danger" @onclick="ConfirmDelete">Evet, Sil</button>
+                    <button type="button" class="btn btn-secondary" @onclick="CancelDelete" disabled="@isBusy">Vazgeç</button>
+                    <button type="button" class="btn btn-danger" @onclick="ConfirmDelete" disabled="@isBusy">
+                        @(isBusy ? "Siliniyor..." : "Evet, Sil")
+                    </button>
                 </div>
             </div>
         </div>
@@ -158,6 +177,10 @@
     private int editingBookId = 0;
     private BookDto? selectedBookForDelete;
 
+    private bool isLoading = true;
+    private bool isBusy = false;
+    private string? loadError;
+
     protected override async Task OnInitializedAsync()
     {
         await RefreshList();
@@ -165,7 +188,21 @@
 
     private async Task RefreshList()
     {
-        books = await BookService.GetBooksAsync();
+        isLoading = true;
+        loadError = null;
+        try
+        {
+            books = await BookService.GetBooksAsync();
+        }
+        catch (Exception)
+        {
+            loadError = "Kitaplar yüklenirken bir hata oluştu. Lütfen API bağlantısını kontrol edip tekrar deneyin.";
+            books = new List<BookDto>();
+        }
+        finally
+        {
+            isLoading = false;
+        }
     }
 
     private void OpenAddModal() { newBook = new(); showAddModal = true; }
@@ -173,11 +210,28 @@
 
     private async Task HandleAddBook()
     {
-        var success = await BookService.AddBookAsync(newBook);
-        if (success)
+        isBusy = true;
+        try
         {
-            showAddModal = false;
-            await RefreshList();
+            var success = await BookService.AddBookAsync(newBook);
+            if (success)
+            {
+                showAddModal = false;
+                Toast.ShowSuccess($"\"{newBook.Title}\" başarıyla eklendi.");
+                await RefreshList();
+            }
+            else
+            {
+                Toast.ShowError("Kitap eklenirken bir hata oluştu.");
+            }
+        }
+        catch (Exception)
+        {
+            Toast.ShowError("Sunucuya ulaşılamadı. Kitap eklenemedi.");
+        }
+        finally
+        {
+            isBusy = false;
         }
     }
 
@@ -199,13 +253,33 @@
     private async Task SaveRow(BookDto originalBook)
     {
         if (string.IsNullOrWhiteSpace(editingBook.Title) || string.IsNullOrWhiteSpace(editingBook.Author) || string.IsNullOrWhiteSpace(editingBook.ISBN))
-            return;
-
-        var success = await BookService.UpdateBookAsync(originalBook.Id, editingBook);
-        if (success)
         {
-            editingBookId = 0;
-            await RefreshList();
+            Toast.ShowWarning("Lütfen tüm alanları doldurun.");
+            return;
+        }
+
+        isBusy = true;
+        try
+        {
+            var success = await BookService.UpdateBookAsync(originalBook.Id, editingBook);
+            if (success)
+            {
+                editingBookId = 0;
+                Toast.ShowSuccess("Kitap bilgileri güncellendi.");
+                await RefreshList();
+            }
+            else
+            {
+                Toast.ShowError("Güncelleme sırasında bir hata oluştu.");
+            }
+        }
+        catch (Exception)
+        {
+            Toast.ShowError("Sunucuya ulaşılamadı. Güncelleme yapılamadı.");
+        }
+        finally
+        {
+            isBusy = false;
         }
     }
 
@@ -219,14 +293,30 @@
 
     private async Task ConfirmDelete()
     {
-        if (selectedBookForDelete != null)
+        if (selectedBookForDelete == null) return;
+
+        isBusy = true;
+        try
         {
             var success = await BookService.DeleteBookAsync(selectedBookForDelete.Id);
             if (success)
             {
                 showDeleteDialog = false;
+                Toast.ShowSuccess($"\"{selectedBookForDelete.Title}\" silindi.");
                 await RefreshList();
             }
+            else
+            {
+                Toast.ShowError("Silme işlemi sırasında bir hata oluştu.");
+            }
+        }
+        catch (Exception)
+        {
+            Toast.ShowError("Sunucuya ulaşılamadı. Kitap silinemedi.");
+        }
+        finally
+        {
+            isBusy = false;
         }
     }
 }

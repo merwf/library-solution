@@ -2,6 +2,7 @@
 @using Library.Core
 @using Library.UI.Services
 @inject IMemberService MemberService
+@inject IToastService Toast
 
 <div class="container mt-4">
     <!-- Üst Başlık ve Yeni Üye Ekleme Butonu -->
@@ -25,16 +26,26 @@
                     <div class="row g-3">
                         <div class="col-md-5">
                             <label class="form-label fw-semibold">Adı Soyadı</label>
-                            <InputText class="form-control" @bind-Value="newMember.FullName" placeholder="Merve Gazioğlu" />
+                            <InputText class="form-control" @bind-Value="newMember.FullName" placeholder="Merve Gazioğlu" disabled="@isSubmitting" />
                             <ValidationMessage For="() => newMember.FullName" class="text-danger" />
                         </div>
                         <div class="col-md-5">
                             <label class="form-label fw-semibold">E-Posta Adresi</label>
-                            <InputText class="form-control" @bind-Value="newMember.Email" placeholder="ornek@kocaeli.edu.tr" />
+                            <InputText class="form-control" @bind-Value="newMember.Email" placeholder="ornek@kocaeli.edu.tr" disabled="@isSubmitting" />
                             <ValidationMessage For="() => newMember.Email" class="text-danger" />
                         </div>
                         <div class="col-md-2 d-flex align-items-end">
-                            <button type="submit" class="btn btn-primary w-100" style="background-color: #0d6efd; border: none;">Kaydet</button>
+                            <button type="submit" class="btn btn-primary w-100" style="background-color: #0d6efd; border: none;" disabled="@isSubmitting">
+                                @if (isSubmitting)
+                                {
+                                    <span class="spinner-border spinner-border-sm me-1"></span>
+                                    <text>Kaydediliyor...</text>
+                                }
+                                else
+                                {
+                                    <text>Kaydet</text>
+                                }
+                            </button>
                         </div>
                     </div>
                 </EditForm>
@@ -55,11 +66,23 @@
     </div>
 
     <!-- Üye Listesi Tablosu -->
-    @if (members == null)
+    @if (isLoading)
     {
-        <div class="d-flex justify-content-center py-4">
+        <div class="d-flex justify-content-center align-items-center gap-2 py-4">
             <div class="spinner-border text-primary" role="status"></div>
+            <span>Yükleniyor...</span>
         </div>
+    }
+    else if (loadError != null)
+    {
+        <div class="alert alert-danger d-flex justify-content-between align-items-center">
+            <span>@loadError</span>
+            <button class="btn btn-sm btn-outline-danger" @onclick="RefreshList">Tekrar Dene</button>
+        </div>
+    }
+    else if (members == null || !members.Any())
+    {
+        <div class="alert alert-secondary text-center">Kayıt bulunamadı.</div>
     }
     else
     {
@@ -106,6 +129,10 @@
     private string searchName = "";
     private string searchEmail = "";
 
+    private bool isLoading = true;
+    private bool isSubmitting = false;
+    private string? loadError;
+
     protected override async Task OnInitializedAsync()
     {
         await RefreshList();
@@ -113,17 +140,48 @@
 
     private async Task RefreshList()
     {
-        members = await MemberService.GetMembersAsync();
+        isLoading = true;
+        loadError = null;
+        try
+        {
+            members = await MemberService.GetMembersAsync();
+        }
+        catch (Exception)
+        {
+            loadError = "Üyeler yüklenirken bir hata oluştu. Lütfen API bağlantısını kontrol edip tekrar deneyin.";
+            members = new List<MemberDto>();
+        }
+        finally
+        {
+            isLoading = false;
+        }
     }
 
     private async Task HandleAddMember()
     {
-        var success = await MemberService.AddMemberAsync(newMember);
-        if (success)
+        isSubmitting = true;
+        try
         {
-            newMember = new();
-            showAddPanel = false;
-            await RefreshList();
+            var success = await MemberService.AddMemberAsync(newMember);
+            if (success)
+            {
+                Toast.ShowSuccess($"\"{newMember.FullName}\" üye olarak eklendi.");
+                newMember = new();
+                showAddPanel = false;
+                await RefreshList();
+            }
+            else
+            {
+                Toast.ShowError("Üye eklenirken bir hata oluştu. Bilgileri kontrol edin.");
+            }
+        }
+        catch (Exception)
+        {
+            Toast.ShowError("Sunucuya ulaşılamadı. Üye eklenemedi.");
+        }
+        finally
+        {
+            isSubmitting = false;
         }
     }
 

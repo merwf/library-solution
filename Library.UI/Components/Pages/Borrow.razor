@@ -4,6 +4,7 @@
 @inject IBookService BookService
 @inject IMemberService MemberService
 @inject IBorrowService BorrowService
+@inject IToastService Toast
 @inject NavigationManager Navigation
 
 <div class="container mt-4" style="max-width: 600px;">
@@ -19,43 +20,78 @@
                 <div class="alert alert-success">@successMessage</div>
             }
 
-            <div class="mb-3">
-                <label class="form-label">Ödünç Verilecek Kitap</label>
-                <select class="form-select" @bind="requestDto.BookId">
-                    <option value="0">-- Kitap Seçiniz --</option>
-                    @if (books != null)
-                    {
-                        @foreach (var book in books.Where(b => b.IsAvailable))
+            @if (isLoading)
+            {
+                <div class="d-flex justify-content-center align-items-center gap-2 py-4">
+                    <div class="spinner-border text-primary" role="status"></div>
+                    <span>Yükleniyor...</span>
+                </div>
+            }
+            else if (loadError != null)
+            {
+                <div class="alert alert-danger d-flex justify-content-between align-items-center">
+                    <span>@loadError</span>
+                    <button class="btn btn-sm btn-outline-danger" @onclick="LoadData">Tekrar Dene</button>
+                </div>
+            }
+            else
+            {
+                <div class="mb-3">
+                    <label class="form-label">Ödünç Verilecek Kitap</label>
+                    <select class="form-select" @bind="requestDto.BookId" disabled="@isSubmitting">
+                        <option value="0">-- Kitap Seçiniz --</option>
+                        @if (books != null && books.Any(b => b.IsAvailable))
                         {
-                            <option value="@book.Id">@book.Title (ISBN: @book.ISBN)</option>
+                            @foreach (var book in books.Where(b => b.IsAvailable))
+                            {
+                                <option value="@book.Id">@book.Title (ISBN: @book.ISBN)</option>
+                            }
                         }
-                    }
-                </select>
-            </div>
-
-            <div class="mb-3">
-                <label class="form-label">Ödünç Alacak Üye</label>
-                <select class="form-select" @bind="requestDto.MemberId">
-                    <option value="0">-- Üye Seçiniz --</option>
-                    @if (members != null)
-                    {
-                        @foreach (var member in members)
+                        else
                         {
-                            <option value="@member.Id">@member.FullName</option>
+                            <option value="0" disabled>Müsait kitap bulunamadı</option>
                         }
+                    </select>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Ödünç Alacak Üye</label>
+                    <select class="form-select" @bind="requestDto.MemberId" disabled="@isSubmitting">
+                        <option value="0">-- Üye Seçiniz --</option>
+                        @if (members != null && members.Any())
+                        {
+                            @foreach (var member in members)
+                            {
+                                <option value="@member.Id">@member.FullName</option>
+                            }
+                        }
+                        else
+                        {
+                            <option value="0" disabled>Kayıtlı üye bulunamadı</option>
+                        }
+                    </select>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Ülke / Kültür Kodu (Ceza Politikası İçin)</label>
+                    <select class="form-select" @bind="requestDto.CountryCode" disabled="@isSubmitting">
+                        <option value="tr-TR">Türkiye (tr-TR)</option>
+                        <option value="ar-AE">Birleşik Arap Emirlikleri (ar-AE)</option>
+                    </select>
+                </div>
+
+                <button class="btn btn-primary w-100" @onclick="HandleBorrow" disabled="@isSubmitting">
+                    @if (isSubmitting)
+                    {
+                        <span class="spinner-border spinner-border-sm me-1"></span>
+                        <text>İşleniyor...</text>
                     }
-                </select>
-            </div>
-
-            <div class="mb-3">
-                <label class="form-label">Ülke / Kültür Kodu (Ceza Politikası İçin)</label>
-                <select class="form-select" @bind="requestDto.CountryCode">
-                    <option value="tr-TR">Türkiye (tr-TR)</option>
-                    <option value="ar-AE">Birleşik Arap Emirlikleri (ar-AE)</option>
-                </select>
-            </div>
-
-            <button class="btn btn-primary w-100" @onclick="HandleBorrow">Ödünç İşlemini Tamamla</button>
+                    else
+                    {
+                        <text>Ödünç İşlemini Tamamla</text>
+                    }
+                </button>
+            }
         </div>
     </div>
 </div>
@@ -67,10 +103,32 @@
     private string? errorMessage;
     private string? successMessage;
 
+    private bool isLoading = true;
+    private bool isSubmitting = false;
+    private string? loadError;
+
     protected override async Task OnInitializedAsync()
     {
-        books = await BookService.GetBooksAsync();
-        members = await MemberService.GetMembersAsync();
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        isLoading = true;
+        loadError = null;
+        try
+        {
+            books = await BookService.GetBooksAsync();
+            members = await MemberService.GetMembersAsync();
+        }
+        catch (Exception)
+        {
+            loadError = "Kitap/üye listesi yüklenirken bir hata oluştu. Lütfen API bağlantısını kontrol edip tekrar deneyin.";
+        }
+        finally
+        {
+            isLoading = false;
+        }
     }
 
     private async Task HandleBorrow()
@@ -84,17 +142,32 @@
             return;
         }
 
-        var success = await BorrowService.BorrowBookAsync(requestDto);
-        if (success)
+        isSubmitting = true;
+        try
         {
-            successMessage = "Kitap başarıyla ödünç verildi! Aktif ödünç listesine yönlendiriliyorsunuz...";
-            requestDto = new();
-            await Task.Delay(2000);
-            Navigation.NavigateTo("/active-borrows");
+            var success = await BorrowService.BorrowBookAsync(requestDto);
+            if (success)
+            {
+                successMessage = "Kitap başarıyla ödünç verildi! Aktif ödünç listesine yönlendiriliyorsunuz...";
+                Toast.ShowSuccess("Kitap başarıyla ödünç verildi.");
+                requestDto = new();
+                await Task.Delay(2000);
+                Navigation.NavigateTo("/active-borrows");
+            }
+            else
+            {
+                errorMessage = "Ödünç verme işlemi sırasında bir API hatası oluştu.";
+                Toast.ShowError("Ödünç verme işlemi başarısız oldu.");
+            }
         }
-        else
+        catch (Exception)
         {
-            errorMessage = "Ödünç verme işlemi sırasında bir API hatası oluştu.";
+            errorMessage = "Sunucuya ulaşılamadı. Lütfen daha sonra tekrar deneyin.";
+            Toast.ShowError("Sunucuya ulaşılamadı.");
+        }
+        finally
+        {
+            isSubmitting = false;
         }
     }
 

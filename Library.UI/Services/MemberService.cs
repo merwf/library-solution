@@ -17,14 +17,8 @@ namespace Library.UI.Services
 
         public async Task<List<MemberDto>> GetMembersAsync()
         {
-            try
-            {
-                return await _http.GetFromJsonAsync<List<MemberDto>>("api/members") ?? new List<MemberDto>();
-            }
-            catch
-            {
-                return new List<MemberDto>();
-            }
+            // Hata sayfada yakalanıp gösterilecek (bkz. Members.razor RefreshList).
+            return await _http.GetFromJsonAsync<List<MemberDto>>("api/members") ?? new List<MemberDto>();
         }
 
         public async Task<bool> AddMemberAsync(MemberDto member)
