@@ -50,7 +50,7 @@ namespace Library.API.Controllers
             _context.BorrowRecords.Add(record);
             await _context.SaveChangesAsync();
 
-            return Ok(new { Message = "Kitap başarıyla ödünç verildi.", RecordId = record.Id, TeslimTarihi = record.DueDate });
+            return Created($"api/borrow/{record.Id}", new { Message = "Kitap başarıyla ödünç verildi.", RecordId = record.Id, TeslimTarihi = record.DueDate });
         }
 
         // POST: api/borrow/{id}/return -> Kitap iade et (iade tarihine göre ceza hesapla)
