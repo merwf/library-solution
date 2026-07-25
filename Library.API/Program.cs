@@ -4,7 +4,8 @@ using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
+// --- RFC 7807 ProblemDetails Servisi ---
+builder.Services.AddProblemDetails();
 
 // --- VERÝTABANI BAÐLANTISINI BURADA EKLÝYORUZ ---
 builder.Services.AddDbContext<LibraryDbContext>(options =>
@@ -15,7 +16,6 @@ builder.Services.AddDbContext<LibraryDbContext>(options =>
 builder.Services.AddScoped<IPenaltyFeeCalculator, PenaltyFeeCalculator>();
 
 builder.Services.AddControllers();
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
@@ -29,9 +29,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-
 app.UseAuthorization();
-
 app.MapControllers();
 
 app.Run();

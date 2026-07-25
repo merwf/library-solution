@@ -1,5 +1,6 @@
-using System;
 using Library.Business;
+using Library.Core;
+using System;
 
 namespace LibraryApplication
 {
@@ -16,8 +17,11 @@ namespace LibraryApplication
             String fee = "";
             try
             {
-                // Calculate metodunu çaðýrýyoruz
-                fee = new PenaltyFeeCalculator().Calculate(args[0], args[1], args[2]);
+                // Calculate metodu artýk PenaltyResultDto dönüyor
+                PenaltyResultDto result = new PenaltyFeeCalculator().Calculate(args[0], args[1], args[2]);
+
+                // FormattedResult metnini alýyoruz (Örn: "5.25 TRY" ya da "Error: ...")
+                fee = result.FormattedResult;
             }
             catch (Exception e)
             {

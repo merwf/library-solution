@@ -26,14 +26,20 @@ namespace Library.API.Controllers
         {
             if (string.IsNullOrWhiteSpace(countryCode) || string.IsNullOrWhiteSpace(startDate) || string.IsNullOrWhiteSpace(endDate))
             {
-                return BadRequest("Lütfen tüm parametreleri (countryCode, startDate, endDate) eksiksiz giriniz.");
+                return Problem(
+                    detail: "Lütfen tüm parametreleri (countryCode, startDate, endDate) eksiksiz giriniz.",
+                    statusCode: StatusCodes.Status400BadRequest,
+                    title: "Eksik Parametre");
             }
 
             var result = _penaltyFeeCalculator.Calculate(countryCode, startDate, endDate);
 
-            if (result.StartsWith("Error:"))
+            if (result.IsError)
             {
-                return BadRequest(result);
+                return Problem(
+                    detail: result.ErrorMessage,
+                    statusCode: StatusCodes.Status400BadRequest,
+                    title: "Hesaplama Hatası");
             }
 
             return Ok(new { FeeResult = result });

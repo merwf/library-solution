@@ -40,7 +40,13 @@ namespace Library.API.Controllers
         public async Task<ActionResult<BookDto>> GetBook(int id)
         {
             var book = await _context.Books.FindAsync(id);
-            if (book == null) return NotFound("Kitap bulunamadı.");
+            if (book == null)
+            {
+                return Problem(
+                    detail: $"Id={id} olan kitap sistemde mevcut değil.",
+                    statusCode: StatusCodes.Status404NotFound,
+                    title: "Kaynak Bulunamadı");
+            }
 
             var bookDto = new BookDto
             {
@@ -76,10 +82,23 @@ namespace Library.API.Controllers
         [HttpPut("{id}")]
         public async Task<IActionResult> PutBook(int id, BookDto bookDto)
         {
-            if (id != bookDto.Id) return BadRequest("ID uyuşmazlığı.");
+            if (id != bookDto.Id)
+            {
+                return Problem(
+                    detail: "URL'deki ID ile gönderilen gövdedeki (body) ID uyuşmuyor.",
+                    statusCode: StatusCodes.Status400BadRequest,
+                    title: "Geçersiz İstek");
+            }
 
             var book = await _context.Books.FindAsync(id);
-            if (book == null) return NotFound("Güncellenmek istenen kitap bulunamadı.");
+
+            if (book == null)
+            {
+                return Problem(
+                    detail: $"Güncellenmek istenen Id={id} olan kitap bulunamadı.",
+                    statusCode: StatusCodes.Status404NotFound,
+                    title: "Kaynak Bulunamadı");
+            }
 
             book.Title = bookDto.Title;
             book.Author = bookDto.Author;
@@ -92,7 +111,13 @@ namespace Library.API.Controllers
             }
             catch (DbUpdateConcurrencyException)
             {
-                if (!_context.Books.Any(e => e.Id == id)) return NotFound();
+                if (!_context.Books.Any(e => e.Id == id))
+                {
+                    return Problem(
+                        detail: "Güncelleme sırasında çakışma oluştu. Kitap silinmiş olabilir.",
+                        statusCode: StatusCodes.Status404NotFound,
+                        title: "Kaynak Bulunamadı");
+                }
                 throw;
             }
 
@@ -104,7 +129,13 @@ namespace Library.API.Controllers
         public async Task<IActionResult> DeleteBook(int id)
         {
             var book = await _context.Books.FindAsync(id);
-            if (book == null) return NotFound("Silinmek istenen kitap bulunamadı.");
+            if (book == null)
+            {
+                return Problem(
+                    detail: $"Silinmek istenen Id={id} olan kitap bulunamadı.",
+                    statusCode: StatusCodes.Status404NotFound,
+                    title: "Kaynak Bulunamadı");
+            }
 
             _context.Books.Remove(book);
             await _context.SaveChangesAsync();

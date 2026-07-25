@@ -13,47 +13,67 @@ namespace Library.API.Controllers
         private readonly LibraryDbContext _context;
         private readonly IPenaltyFeeCalculator _calculator;
 
-        // Hem veritabanını hem de senin yazdığın Ceza Hesaplayıcıyı içeri alıyoruz
         public BorrowController(LibraryDbContext context, IPenaltyFeeCalculator calculator)
         {
             _context = context;
             _calculator = calculator;
         }
 
-        // POST: api/borrow -> Kitap ödünç al (BookId, MemberId, CountryCode)
+        // POST: api/borrow -> Kitap ödünç al
         [HttpPost]
         public async Task<IActionResult> BorrowBook([FromBody] BorrowRequestDto request)
         {
             var book = await _context.Books.FindAsync(request.BookId);
-            if (book == null) return NotFound("Kitap bulunamadı.");
-            if (!book.IsAvailable) return Conflict("Bu kitap şu an başkasında, ödünç verilemez.");
+            if (book == null)
+            {
+                return Problem(
+                    detail: $"Id={request.BookId} olan kitap bulunamadı.",
+                    statusCode: StatusCodes.Status404NotFound,
+                    title: "Kaynak Bulunamadı");
+            }
+
+            if (!book.IsAvailable)
+            {
+                return Problem(
+                    detail: "Bu kitap şu an bir başkasında olduğu için ödünç verilemez.",
+                    statusCode: StatusCodes.Status409Conflict,
+                    title: "Çakışma Durumu");
+            }
 
             var member = await _context.Members.FindAsync(request.MemberId);
-            if (member == null) return NotFound("Üye bulunamadı.");
+            if (member == null)
+            {
+                return Problem(
+                    detail: $"Id={request.MemberId} olan üye bulunamadı.",
+                    statusCode: StatusCodes.Status404NotFound,
+                    title: "Kaynak Bulunamadı");
+            }
 
-            // Yeni bir ödünç kaydı oluşturuyoruz
             var record = new BorrowRecord
             {
                 BookId = request.BookId,
                 MemberId = request.MemberId,
                 CountryCode = request.CountryCode,
                 BorrowDate = DateTime.Now,
-                DueDate = DateTime.Now.AddDays(10), // Kitaplar varsayılan 10 günlüğüne verilsin
+                DueDate = DateTime.Now.AddDays(10),
                 ReturnDate = null,
                 ComputedPenaltyFee = 0,
                 IsPenaltyPaid = false
             };
 
-            // Kitabın durumunu "Ödünçte" (false) yapıyoruz
             book.IsAvailable = false;
-
             _context.BorrowRecords.Add(record);
             await _context.SaveChangesAsync();
 
-            return Created($"api/borrow/{record.Id}", new { Message = "Kitap başarıyla ödünç verildi.", RecordId = record.Id, TeslimTarihi = record.DueDate });
+            return Created($"api/borrow/{record.Id}", new
+            {
+                Message = "Kitap başarıyla ödünç verildi.",
+                RecordId = record.Id,
+                TeslimTarihi = record.DueDate
+            });
         }
 
-        // POST: api/borrow/{id}/return -> Kitap iade et (iade tarihine göre ceza hesapla)
+        // POST: api/borrow/{id}/return -> Kitap iade et
         [HttpPost("{id}/return")]
         public async Task<IActionResult> ReturnBook(int id)
         {
@@ -61,35 +81,43 @@ namespace Library.API.Controllers
                 .Include(br => br.Book)
                 .FirstOrDefaultAsync(br => br.Id == id);
 
-            if (record == null) return NotFound("Ödünç kaydı bulunamadı.");
-            if (record.ReturnDate != null) return BadRequest("Bu kitap zaten iade edilmiş.");
+            if (record == null)
+            {
+                return Problem(
+                    detail: $"Id={id} olan ödünç kaydı bulunamadı.",
+                    statusCode: StatusCodes.Status404NotFound,
+                    title: "Kaynak Bulunamadı");
+            }
 
-            DateTime returnDate = DateTime.Now; // Şu anki iade zamanı
+            if (record.ReturnDate != null)
+            {
+                return Problem(
+                    detail: "Bu ödünç kaydına ait kitap daha önce zaten iade edilmiş.",
+                    statusCode: StatusCodes.Status400BadRequest,
+                    title: "Geçersiz İşlem");
+            }
+
+            DateTime returnDate = DateTime.Now;
             record.ReturnDate = returnDate;
 
-            // Tarihleri PenaltyFeeCalculator'ın istediği string formatına (dd.MM.yyyy) getiriyoruz
             string dueDateStr = record.DueDate.ToString("dd.MM.yyyy");
             string returnDateStr = returnDate.ToString("dd.MM.yyyy");
 
-            // --- CEZA HESAPLAYICIYI ÇAĞIRIYORUZ ---
-            string penaltyResult = _calculator.Calculate(record.CountryCode, dueDateStr, returnDateStr);
+            var penalty = _calculator.Calculate(record.CountryCode, dueDateStr, returnDateStr);
 
-            // Eğer sonuç "0.00 TRY" veya bir "Error" değilse, cezayı entity üzerindeki alana kaydedelim
-            if (!penaltyResult.StartsWith("Error") && !penaltyResult.Contains("0.00"))
+            if (penalty.IsError)
             {
-                // Örn: "5,25 TRY" ifadesindeki sayı kısmını ayıklayıp decimal'e çevirme simülasyonu
-                var parts = penaltyResult.Split(' ');
-                if (parts.Length > 0)
-                {
-                    var culture = new System.Globalization.CultureInfo(record.CountryCode);
-                    if (decimal.TryParse(parts[0], System.Globalization.NumberStyles.Any, culture, out decimal fee))
-                    {
-                        record.ComputedPenaltyFee = fee;
-                    }
-                }
+                return Problem(
+                    detail: penalty.ErrorMessage,
+                    statusCode: StatusCodes.Status400BadRequest,
+                    title: "Hesaplama Hatası");
             }
 
-            // Kitap iade edildiği için durumunu tekrar "Erişilebilir" (true) yapıyoruz
+            if (penalty.Amount > 0)
+            {
+                record.ComputedPenaltyFee = penalty.Amount;
+            }
+
             if (record.Book != null)
             {
                 record.Book.IsAvailable = true;
@@ -101,11 +129,11 @@ namespace Library.API.Controllers
             {
                 Message = "Kitap başarıyla iade alındı.",
                 IadeTarihi = record.ReturnDate,
-                CezaDurumu = penaltyResult
+                CezaDurumu = penalty.FormattedResult
             });
         }
 
-        // GET: api/borrow/active -> Aktif ödünç kayıtlarını listele (ReturnDate'i boş olanlar)
+        // GET: api/borrow/active -> Aktif ödünç kayıtlarını listele
         [HttpGet("active")]
         public async Task<ActionResult<IEnumerable<BorrowRecordDto>>> GetActiveBorrows()
         {
@@ -131,6 +159,5 @@ namespace Library.API.Controllers
 
             return Ok(activeBorrows);
         }
-
     }
 }
