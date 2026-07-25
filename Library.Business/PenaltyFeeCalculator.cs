@@ -1,8 +1,9 @@
+using Library.Core;
+using LibraryConfigUtilities;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
-using LibraryConfigUtilities;
 
 namespace Library.Business
 {
@@ -31,15 +32,16 @@ namespace Library.Business
         /// <summary>
         /// Ülke kodu ve tarih aralýðýna göre toplam cezayý hesaplar.
         /// </summary>
-        public string Calculate(string countryCode, string startDateStr, string endDateStr)
+        public PenaltyResultDto Calculate(string countryCode, string startDateStr, string endDateStr)
         {
             // 1. Ülke konfigürasyonunu Culture özelliðine göre buluyoruz
             var countrySetting = _settingList.FirstOrDefault(c =>
                 c.Culture.Equals(countryCode, StringComparison.OrdinalIgnoreCase));
 
+            // Hata durumunda:
             if (countrySetting == null)
             {
-                return "Error: Country configuration not found.";
+                return new PenaltyResultDto { IsError = true, ErrorMessage = "Country configuration not found." };
             }
 
             // Ülkeye ait kültür bilgisini oluþturuyoruz
@@ -49,12 +51,12 @@ namespace Library.Business
             if (!DateTime.TryParse(startDateStr, culture, DateTimeStyles.None, out DateTime startDate) ||
                 !DateTime.TryParse(endDateStr, culture, DateTimeStyles.None, out DateTime endDate))
             {
-                return "Error: Invalid date format for the selected country.";
+                return new PenaltyResultDto { IsError = true, ErrorMessage = "Invalid date format for the selected country." };
             }
 
             if (startDate > endDate)
             {
-                return "Error: Start date cannot be later than end date.";
+                return new PenaltyResultDto { IsError = true, ErrorMessage = "Start date cannot be later than end date." };
             }
 
             // 3. Ýþ günü sayýsýnýn hesaplanmasý
@@ -65,7 +67,11 @@ namespace Library.Business
 
             if (businessDays <= allowedDays)
             {
-                return $"0.00 {countrySetting.Currency}";
+                return new PenaltyResultDto
+                {
+                    Amount = 0,
+                    Currency = countrySetting.Currency
+                };
             }
 
             int penaltyDays = businessDays - allowedDays;
@@ -74,7 +80,11 @@ namespace Library.Business
             decimal dailyFee = Convert.ToDecimal(countrySetting.DailyPenaltyFee, culture);
             decimal totalPenalty = penaltyDays * dailyFee;
 
-            return $"{totalPenalty.ToString("F2", culture)} {countrySetting.Currency}";
+            return new PenaltyResultDto
+            {
+                Amount = totalPenalty,
+                Currency = countrySetting.Currency
+            };
         }
 
         /// <summary>
