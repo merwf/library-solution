@@ -26,7 +26,7 @@ namespace Library.API.Controllers
         {
             var book = await _context.Books.FindAsync(request.BookId);
             if (book == null) return NotFound("Kitap bulunamadı.");
-            if (!book.IsAvailable) return BadRequest("Bu kitap şu an başkasında, ödünç verilemez.");
+            if (!book.IsAvailable) return Conflict("Bu kitap şu an başkasında, ödünç verilemez.");
 
             var member = await _context.Members.FindAsync(request.MemberId);
             if (member == null) return NotFound("Üye bulunamadı.");
@@ -71,7 +71,7 @@ namespace Library.API.Controllers
             string dueDateStr = record.DueDate.ToString("dd.MM.yyyy");
             string returnDateStr = returnDate.ToString("dd.MM.yyyy");
 
-            // --- SENİN YAZDIĞIN CEZA HESAPLAYICIYI ÇAĞIRIYORUZ ---
+            // --- CEZA HESAPLAYICIYI ÇAĞIRIYORUZ ---
             string penaltyResult = _calculator.Calculate(record.CountryCode, dueDateStr, returnDateStr);
 
             // Eğer sonuç "0.00 TRY" veya bir "Error" değilse, cezayı entity üzerindeki alana kaydedelim
@@ -132,12 +132,5 @@ namespace Library.API.Controllers
             return Ok(activeBorrows);
         }
 
-        // İstek gövdesini (JSON body) düzgün karşılayabilmek için yardımcı DTO sınıfı
-        public class BorrowRequestDto
-        {
-            public int BookId { get; set; }
-            public int MemberId { get; set; }
-            public string CountryCode { get; set; } = string.Empty; // tr-TR veya ar-AE
-        }
     }
 }
