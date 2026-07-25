@@ -4,13 +4,14 @@
 
 ![.NET](https://img.shields.io/badge/.NET-8.0-512BD4?style=for-the-badge&logo=dotnet&logoColor=white)
 ![C#](https://img.shields.io/badge/C%23-239120?style=for-the-badge&logo=csharp&logoColor=white)
+![Blazor](https://img.shields.io/badge/Blazor-Server-512BD4?style=for-the-badge&logo=blazor&logoColor=white)
 ![EF Core](https://img.shields.io/badge/Entity%20Framework%20Core-8.0-512BD4?style=for-the-badge&logo=nuget&logoColor=white)
 ![SQL Server](https://img.shields.io/badge/SQL%20Server-LocalDB-CC2927?style=for-the-badge&logo=microsoftsqlserver&logoColor=white)
 ![xUnit](https://img.shields.io/badge/Tests-xUnit-7A1FA2?style=for-the-badge&logo=nunit&logoColor=white)
 ![Swagger](https://img.shields.io/badge/API%20Docs-Swagger-85EA2D?style=for-the-badge&logo=swagger&logoColor=black)
 ![License](https://img.shields.io/badge/License-MIT-yellow?style=for-the-badge)
 
-**Ülkeye özel iş günü / resmi tatil hesaplaması yapan dinamik ceza motoruna sahip, katmanlı mimari ile geliştirilmiş RESTful Kütüphane Otomasyon API'si.**
+**Ülkeye özel iş günü / resmi tatil hesaplaması yapan dinamik ceza motoruna sahip, katmanlı mimari ile geliştirilmiş RESTful Kütüphane Otomasyon API'si ve Blazor Server tabanlı yönetim arayüzü.**
 
 </div>
 
@@ -24,12 +25,13 @@
 - [Öne Çıkan İş Kuralları](#one-cikan-is-kurallari)
 - [Kurulum ve Çalıştırma Adımları](#-kurulum-ve-çalıştırma-adımları)
 - [API Endpoint'leri](#-api-endpointleri)
+- [Kullanıcı Arayüzü (UI)](#kullanici-arayuzu-ui)
 - [Testlerin Çalıştırılması](#-testlerin-çalıştırılması)
 ---
 
 ## 🎯 Proje Hakkında
 
-Bu proje, bir kütüphanenin **kitap**, **üye** ve **ödünç alma/iade** süreçlerini yönetmek amacıyla geliştirilmiş, **.NET 8** tabanlı bir Web API stajyer projesidir. Sistemin en dikkat çekici bileşeni, ülkeye özgü hafta sonu ve resmi tatil takvimlerini dikkate alarak gecikme cezasını hesaplayan **`PenaltyFeeCalculator`** servisidir.
+Bu proje, bir kütüphanenin **kitap**, **üye** ve **ödünç alma/iade** süreçlerini yönetmek amacıyla geliştirilmiş, **.NET 8** tabanlı bir Web API stajyer projesidir. Sistemin en dikkat çekici bileşeni, ülkeye özgü hafta sonu ve resmi tatil takvimlerini dikkate alarak gecikme cezasını hesaplayan **`PenaltyFeeCalculator`** servisidir. Proje ayrıca, API ile tam entegre çalışan **Blazor Server** tabanlı bir yönetim paneli (**Library.UI**) içerir.
 
 Proje; **SOLID prensipleri**, **Dependency Injection (IoC)** ve **N-Tier (katmanlı) mimari** kullanılarak sürdürülebilir, test edilebilir ve genişletilebilir bir yapıda tasarlanmıştır.
 
@@ -40,12 +42,13 @@ Proje; **SOLID prensipleri**, **Dependency Injection (IoC)** ve **N-Tier (katman
 | Kategori | Teknoloji |
 |---|---|
 | **Framework** | .NET 8 (ASP.NET Core Web API) |
+| **UI** | Blazor Server (Interactive Server Components), Bootstrap 5 |
 | **ORM** | Entity Framework Core 8 (Code-First) |
 | **Veritabanı** | SQL Server / LocalDB |
 | **API Dokümantasyonu** | Swagger / OpenAPI |
 | **Test Framework'ü** | xUnit |
 | **Konfigürasyon** | Custom `ConfigurationSectionHandler` (App.config XML) |
-| **Tasarım Desenleri** | SOLID (SRP, DIP), Dependency Injection, Repository/Entity Pattern |
+| **Tasarım Desenleri** | SOLID (SRP, DIP), Dependency Injection, Repository/Entity Pattern, Service Pattern |
 
 ---
 
@@ -57,10 +60,10 @@ Proje, sorumlulukların net şekilde ayrıldığı bir **Layered Monolith (N-Tie
 ```
 LibrarySolution/
 │
-├── Library.Core/                  # Entity (Domain Model) katmanı
-│   ├── Book.cs                    # Kitap varlığı
-│   ├── Member.cs                  # Üye varlığı
-│   └── BorrowRecord.cs            # Ödünç alma kaydı varlığı
+├── Library.Core/                  # Entity (Domain Model) ve DTO katmanı
+│   ├── Book.cs / BookDto.cs
+│   ├── Member.cs / MemberDto.cs
+│   └── BorrowRecord.cs / BorrowRecordDto.cs
 │
 ├── Library.Business/              # İş kuralları / servis katmanı
 │   ├── IPenaltyFeeCalculator.cs   # Ceza hesaplama sözleşmesi (interface)
@@ -76,6 +79,13 @@ LibrarySolution/
 │       ├── BorrowController.cs    # Ödünç alma / iade işlemleri
 │       └── PenaltyController.cs   # Ceza hesaplama endpoint'i
 │
+├── Library.UI/                    # Blazor Server yönetim paneli
+│   ├── Components/
+│   │   ├── Layout/                # MainLayout, NavMenu
+│   │   ├── Pages/                 # Home, Books, Members, Borrow, ActiveBorrows
+│   │   └── Shared/                # ToastContainer (bildirim bileşeni)
+│   └── Services/                  # BookService, MemberService, BorrowService, ToastService
+│
 ├── LibraryApplication/            # Konsol tabanlı bağımsız çalıştırma (Program.cs)
 │   └── Program.cs
 │
@@ -88,12 +98,12 @@ LibrarySolution/
 ### Katmanlar Arası Bağımlılık Yönü
 
 ```
-Library.API  →  Library.Business  →  Library.Core
-     ↓                                     ↑
-Library.Data  ───────────────────────────┘
+Library.UI  →  Library.API  →  Library.Business  →  Library.Core
+                    ↓                                     ↑
+              Library.Data  ───────────────────────────┘
 ```
 
-> **Dependency Inversion Principle (DIP)** gereği, `Library.API` katmanı `PenaltyFeeCalculator` somut sınıfına değil, `IPenaltyFeeCalculator` soyutlamasına bağımlıdır. Bağımlılık, `Program.cs` üzerinde IoC Container aracılığıyla enjekte edilir.
+> **Dependency Inversion Principle (DIP)** gereği, `Library.API` katmanı `PenaltyFeeCalculator` somut sınıfına değil, `IPenaltyFeeCalculator` soyutlamasına bağımlıdır. Bağımlılık, `Program.cs` üzerinde IoC Container aracılığıyla enjekte edilir. Aynı şekilde `Library.UI`, servis arayüzleri (`IBookService`, `IMemberService`, `IBorrowService`, `IToastService`) üzerinden çalışır ve API'ye doğrudan değil `HttpClient` soyutlaması aracılığıyla bağlanır.
 
 ---
 
@@ -125,6 +135,13 @@ Library.Data  ──────────────────────
 - Bir kitap **yalnızca müsaitse (`IsAvailable = true`)** ödünç verilebilir; ödünç verildiğinde durumu otomatik güncellenir.
 - İade işleminde ceza otomatik hesaplanır ve `BorrowRecord.ComputedPenaltyFee` alanına yazılır.
 - Başlangıç tarihi bitiş tarihinden ileride olamaz; aksi durumda anlamlı bir hata mesajı döner.
+
+### Kullanıcı Arayüzü (UX) Kuralları
+
+- Tüm API çağrıları sırasında **yükleniyor göstergesi** (spinner) gösterilir.
+- Liste boşsa kullanıcıya **"Kayıt bulunamadı"** mesajı gösterilir.
+- Ekleme / güncelleme / silme / ödünç verme / iade işlemleri sonucunda **toast bildirimi** (başarı veya hata) gösterilir.
+- API'ye ulaşılamadığı durumlarda kullanıcıya boş liste yerine **"Tekrar Dene"** seçenekli anlamlı bir hata mesajı gösterilir.
 
 ---
 
@@ -174,7 +191,7 @@ dotnet ef migrations add InitialCreate --project Library.Data --startup-project 
 dotnet ef database update --project Library.Data --startup-project Library.API
 ```
 
-### 5️⃣ Projeyi Çalıştırın
+### 5️⃣ API'yi Çalıştırın
 
 ```bash
 dotnet run --project Library.API
@@ -185,6 +202,26 @@ API ayağa kalktıktan sonra Swagger arayüzüne şu adresten ulaşabilirsiniz:
 ```
 https://localhost:{port}/swagger
 ```
+
+### 6️⃣ UI Panelini Çalıştırın
+
+`Library.UI/appsettings.json` içindeki `ApiSettings:BaseUrl` değerinin, 5. adımda ayağa kalkan API adresiyle eşleştiğinden emin olun:
+
+```json
+{
+  "ApiSettings": {
+    "BaseUrl": "https://localhost:{api-port}/"
+  }
+}
+```
+
+Ardından UI projesini ayrı bir terminalde çalıştırın:
+
+```bash
+dotnet run --project Library.UI
+```
+
+Tarayıcıda açılan adresten (`https://localhost:{ui-port}`) yönetim paneline erişebilirsiniz.
 
 ### (Opsiyonel) Konsol Uygulamasını Çalıştırma
 
@@ -294,6 +331,43 @@ GET /api/penalty/calculate?countryCode=tr-TR&startDate=16.11.2009&endDate=30.11.
 ```json
 "Error: Country configuration not found."
 ```
+
+---
+
+<a name="kullanici-arayuzu-ui"></a>
+## 🖥️ Kullanıcı Arayüzü (UI)
+
+`Library.UI` projesi, API'nin tüm işlevlerini kullanıcı dostu bir Blazor Server paneli üzerinden sunar. Panel; yükleniyor göstergeleri, boş liste mesajları, başarı/hata toast bildirimleri ve anlamlı hata mesajlarıyla desteklenmiştir.
+
+### 🏠 Ana Sayfa
+
+Toplam kitap, üye ve ödünçteki kitap sayısını özetleyen genel bakış ekranı.
+
+![Ana Sayfa](docs/screenshots/home.png)
+
+### 📗 Kitap Yönetim Paneli
+
+Kitapların listelendiği, satır içi düzenlenebildiği, eklenip silinebildiği ekran.
+
+![Kitap Listesi](docs/screenshots/books.png)
+
+### 👤 Üye Yönetim Paneli
+
+Üye ekleme formu ve ad/e-posta bazlı canlı arama filtresi içeren ekran.
+
+![Üye Yönetimi](docs/screenshots/members.png)
+
+### 🔄 Kitap Ödünç Verme
+
+Müsait kitap ve kayıtlı üye seçilerek, ülke/ceza politikasına göre ödünç verme işleminin yapıldığı form.
+
+![Kitap Ödünç Verme](docs/screenshots/borrow.png)
+
+### 📋 Aktif Ödünçler / İade
+
+Aktif ödünç kayıtlarının listelendiği ve "İade Al ve Ceza Hesapla" butonuyla iade + ceza hesaplama işleminin tek adımda yapıldığı ekran.
+
+![Aktif Ödünçler](docs/screenshots/active-borrows.png)
 
 ---
 
