@@ -13,8 +13,9 @@ builder.Services.AddDbContext<LibraryDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 // ------------------------------------------------
 
-// Book verilerine eriþimi soyutlamak için repository DI kaydý (DIP çözümü)
+// Controller verilerine eriþimi soyutlamak için repository DI kaydý (DIP çözümü)
 builder.Services.AddScoped<IBookRepository, BookRepository>();
+builder.Services.AddScoped<IMemberRepository, MemberRepository>();
 
 // Business Servislerinin Eklenmesi (Dependency Injection)
 builder.Services.AddScoped<IPenaltyFeeCalculator, PenaltyFeeCalculator>();
