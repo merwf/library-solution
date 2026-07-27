@@ -73,8 +73,10 @@ namespace Library.Business
                 IsPenaltyPaid = false
             };
 
+            // book.IsAvailable değişikliği tracked entity üzerinde yapılıyor,
+            // ayrı bir UpdateAsync çağrısına gerek yok — AddAsync'in
+            // SaveChangesAsync'i her iki değişikliği de TEK seferde kaydedecek.
             book.IsAvailable = false;
-            await _bookRepository.UpdateAsync(book);
             await _borrowRepository.AddAsync(record);
 
             return new BorrowResultDto
