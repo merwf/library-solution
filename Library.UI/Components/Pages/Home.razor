@@ -47,12 +47,17 @@
 
     protected override async Task OnInitializedAsync()
     {
-        var books = await BookService.GetBooksAsync();
-        totalBooks = books.Count;
+        // 1. Kitaplar için PagedResult nesnesi dönüyor
+        var booksResult = await BookService.GetBooksAsync();
 
+        // Hatanın çözümü: .Count yerine .TotalCount (veya .Items.Count) kullanıyoruz
+        totalBooks = booksResult.TotalCount;
+
+        // 2. Üyeler listesi aynı kalabilir
         var members = await MemberService.GetMembersAsync();
         totalMembers = members.Count;
 
+        // 3. Ödünç kayıtları listesi aynı kalabilir
         var borrows = await BorrowService.GetActiveBorrowsAsync();
         activeBorrowsCount = borrows.Count;
     }

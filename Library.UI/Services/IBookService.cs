@@ -6,7 +6,7 @@ namespace Library.UI.Services
 {
     public interface IBookService
     {
-        Task<List<BookDto>> GetBooksAsync();
+        Task<PagedResult<BookDto>> GetBooksAsync(int page = 1, int pageSize = 10);
         Task<bool> AddBookAsync(BookDto book);
         Task<bool> UpdateBookAsync(int id, BookDto book);
         Task<bool> DeleteBookAsync(int id);

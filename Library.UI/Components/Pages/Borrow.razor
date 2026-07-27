@@ -104,6 +104,7 @@
     private string? successMessage;
 
     private bool isLoading = true;
+    private bool isBusy = false; // Veya isSubmitting
     private bool isSubmitting = false;
     private string? loadError;
 
@@ -118,7 +119,10 @@
         loadError = null;
         try
         {
-            books = await BookService.GetBooksAsync();
+            // PagedResult dönen servisten yanıtı alıp .Items listesini çekiyoruz
+            var booksResult = await BookService.GetBooksAsync(1, 1000);
+            books = booksResult.Items;
+
             members = await MemberService.GetMembersAsync();
         }
         catch (Exception)

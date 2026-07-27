@@ -1,5 +1,6 @@
 ﻿using Library.Core;
 using Library.Data;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
@@ -14,17 +15,25 @@ namespace Library.API.Controllers
     {
         private readonly LibraryDbContext _context;
 
-        // Program.cs'de tanımladığımız veritabanı bağlantısını buraya çağırıyoruz (Dependency Injection)
         public BooksController(LibraryDbContext context)
         {
             _context = context;
         }
 
-        // GET: api/books -> Tüm kitapları listele
+        // GET: api/books?page=1&pageSize=10 -> Sayfalanmış kitap listesini getirir
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<BookDto>>> GetBooks()
+        [ProducesResponseType(typeof(PagedResult<BookDto>), StatusCodes.Status200OK)]
+        public async Task<IActionResult> GetBooks([FromQuery] int page = 1, [FromQuery] int pageSize = 10)
         {
-            return await _context.Books
+            if (page < 1) page = 1;
+            if (pageSize < 1) pageSize = 10;
+
+            var totalCount = await _context.Books.CountAsync();
+
+            var items = await _context.Books
+                .OrderBy(b => b.Id)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
                 .Select(b => new BookDto
                 {
                     Id = b.Id,
@@ -32,7 +41,18 @@ namespace Library.API.Controllers
                     Author = b.Author,
                     ISBN = b.ISBN,
                     IsAvailable = b.IsAvailable
-                }).ToListAsync();
+                })
+                .ToListAsync();
+
+            var result = new PagedResult<BookDto>
+            {
+                Items = items,
+                TotalCount = totalCount,
+                Page = page,
+                PageSize = pageSize
+            };
+
+            return Ok(result);
         }
 
         // GET: api/books/{id} -> ID'ye göre kitap detayı getir

@@ -1,4 +1,5 @@
 ﻿using Library.Core;
+using Microsoft.AspNetCore.Mvc.RazorPages;
 using System.Collections.Generic;
 using System.Net.Http;
 using System.Net.Http.Json;
@@ -15,12 +16,13 @@ namespace Library.UI.Services
             _http = http;
         }
 
-        public async Task<List<BookDto>> GetBooksAsync()
+        public async Task<PagedResult<BookDto>> GetBooksAsync(int page = 1, int pageSize = 10)
         {
             // Not: Hata burada yutulmuyor. API'ye ulaşılamazsa exception sayfaya (Books.razor)
             // gider; sayfa bunu yakalayıp kullanıcıya anlamlı bir hata mesajı gösterir.
             // Aksi halde "liste boş" ile "API'ye ulaşılamadı" durumları ayırt edilemezdi.
-            return await _http.GetFromJsonAsync<List<BookDto>>("api/books") ?? new List<BookDto>();
+            return await _http.GetFromJsonAsync<PagedResult<BookDto>>($"api/books?page={page}&pageSize={pageSize}") 
+                ?? new PagedResult<BookDto>();
         }
 
         public async Task<bool> AddBookAsync(BookDto book)

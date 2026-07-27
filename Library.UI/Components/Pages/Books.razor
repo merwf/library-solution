@@ -99,6 +99,29 @@
                 }
             </tbody>
         </table>
+
+        <!-- SAYFALAMA (PAGINATION) ALT BİLGİSİ VE BUTONLAR -->
+        <div class="d-flex justify-content-between align-items-center mt-3">
+            <div>
+                <small class="text-muted">
+                    Toplam <strong>@pagedResult.TotalCount</strong> kayıttan
+                    Sayfa <strong>@pagedResult.Page</strong> / <strong>@pagedResult.TotalPages</strong> gösteriliyor.
+                </small>
+            </div>
+            <nav>
+                <ul class="pagination pagination-sm mb-0">
+                    <li class="page-item @(currentPage <= 1 ? "disabled" : "")">
+                        <button class="page-link" @onclick="PreviousPage" disabled="@isBusy">Önceki</button>
+                    </li>
+                    <li class="page-item disabled">
+                        <span class="page-link"> Sayfa @currentPage </span>
+                    </li>
+                    <li class="page-item @(currentPage >= pagedResult.TotalPages ? "disabled" : "")">
+                        <button class="page-link" @onclick="NextPage" disabled="@isBusy">Sonraki</button>
+                    </li>
+                </ul>
+            </nav>
+        </div>
     }
 </div>
 
@@ -169,6 +192,11 @@
 
 @code {
     private List<BookDto>? books;
+    private PagedResult<BookDto> pagedResult = new();
+
+    private int currentPage = 1;
+    private int pageSize = 5;
+
     private BookDto newBook = new();
     private BookDto editingBook = new();
 
@@ -192,16 +220,40 @@
         loadError = null;
         try
         {
-            books = await BookService.GetBooksAsync();
+            // API'den gelen PagedResult objesini alıyoruz
+            pagedResult = await BookService.GetBooksAsync(currentPage, pageSize);
+
+            // DİKKAT: 'books' listesine PagedResult'ın kendisini değil, İÇİNDEKİ Items listesini atıyoruz!
+            books = pagedResult.Items;
         }
         catch (Exception)
         {
             loadError = "Kitaplar yüklenirken bir hata oluştu. Lütfen API bağlantısını kontrol edip tekrar deneyin.";
             books = new List<BookDto>();
+            pagedResult = new PagedResult<BookDto>();
         }
         finally
         {
             isLoading = false;
+        }
+    }
+
+    // Sayfalama butonları için metodlar
+    private async Task NextPage()
+    {
+        if (currentPage < pagedResult.TotalPages)
+        {
+            currentPage++;
+            await RefreshList();
+        }
+    }
+
+    private async Task PreviousPage()
+    {
+        if (currentPage > 1)
+        {
+            currentPage--;
+            await RefreshList();
         }
     }
 
