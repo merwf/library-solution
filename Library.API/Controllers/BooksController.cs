@@ -1,11 +1,7 @@
-﻿using Library.Core;
-using Library.Data;
-using Microsoft.AspNetCore.Http;
+﻿// Library.API/Controllers/BooksController.cs
+using Library.Core;
+using Library.Data.Repositories;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace Library.API.Controllers
 {
@@ -13,14 +9,13 @@ namespace Library.API.Controllers
     [ApiController]
     public class BooksController : ControllerBase
     {
-        private readonly LibraryDbContext _context;
+        private readonly IBookRepository _bookRepository;
 
-        public BooksController(LibraryDbContext context)
+        public BooksController(IBookRepository bookRepository)
         {
-            _context = context;
+            _bookRepository = bookRepository;
         }
 
-        // GET: api/books?page=1&pageSize=10 -> Sayfalanmış kitap listesini getirir
         [HttpGet]
         [ProducesResponseType(typeof(PagedResult<BookDto>), StatusCodes.Status200OK)]
         public async Task<IActionResult> GetBooks([FromQuery] int page = 1, [FromQuery] int pageSize = 10)
@@ -28,25 +23,18 @@ namespace Library.API.Controllers
             if (page < 1) page = 1;
             if (pageSize < 1) pageSize = 10;
 
-            var totalCount = await _context.Books.CountAsync();
+            var (books, totalCount) = await _bookRepository.GetAllAsync(page, pageSize);
 
-            var items = await _context.Books
-                .OrderBy(b => b.Id)
-                .Skip((page - 1) * pageSize)
-                .Take(pageSize)
-                .Select(b => new BookDto
+            var result = new PagedResult<BookDto>
+            {
+                Items = books.Select(b => new BookDto
                 {
                     Id = b.Id,
                     Title = b.Title,
                     Author = b.Author,
                     ISBN = b.ISBN,
                     IsAvailable = b.IsAvailable
-                })
-                .ToListAsync();
-
-            var result = new PagedResult<BookDto>
-            {
-                Items = items,
+                }).ToList(),
                 TotalCount = totalCount,
                 Page = page,
                 PageSize = pageSize
@@ -55,11 +43,10 @@ namespace Library.API.Controllers
             return Ok(result);
         }
 
-        // GET: api/books/{id} -> ID'ye göre kitap detayı getir
         [HttpGet("{id}")]
         public async Task<ActionResult<BookDto>> GetBook(int id)
         {
-            var book = await _context.Books.FindAsync(id);
+            var book = await _bookRepository.GetByIdAsync(id);
             if (book == null)
             {
                 return Problem(
@@ -68,19 +55,16 @@ namespace Library.API.Controllers
                     title: "Kaynak Bulunamadı");
             }
 
-            var bookDto = new BookDto
+            return Ok(new BookDto
             {
                 Id = book.Id,
                 Title = book.Title,
                 Author = book.Author,
                 ISBN = book.ISBN,
                 IsAvailable = book.IsAvailable
-            };
-
-            return Ok(bookDto);
+            });
         }
 
-        // POST: api/books -> Yeni kitap ekle
         [HttpPost]
         public async Task<ActionResult<BookDto>> PostBook(BookDto bookDto)
         {
@@ -91,14 +75,13 @@ namespace Library.API.Controllers
                 ISBN = bookDto.ISBN,
                 IsAvailable = true
             };
-            _context.Books.Add(book);
-            await _context.SaveChangesAsync();
+
+            await _bookRepository.AddAsync(book);
 
             bookDto.Id = book.Id;
             return CreatedAtAction(nameof(GetBook), new { id = book.Id }, bookDto);
         }
 
-        // PUT: api/books/{id} -> Kitap güncelle
         [HttpPut("{id}")]
         public async Task<IActionResult> PutBook(int id, BookDto bookDto)
         {
@@ -110,9 +93,17 @@ namespace Library.API.Controllers
                     title: "Geçersiz İstek");
             }
 
-            var book = await _context.Books.FindAsync(id);
+            var book = new Book
+            {
+                Id = bookDto.Id,
+                Title = bookDto.Title,
+                Author = bookDto.Author,
+                ISBN = bookDto.ISBN,
+                IsAvailable = bookDto.IsAvailable
+            };
 
-            if (book == null)
+            var updated = await _bookRepository.UpdateAsync(book);
+            if (!updated)
             {
                 return Problem(
                     detail: $"Güncellenmek istenen Id={id} olan kitap bulunamadı.",
@@ -120,36 +111,14 @@ namespace Library.API.Controllers
                     title: "Kaynak Bulunamadı");
             }
 
-            book.Title = bookDto.Title;
-            book.Author = bookDto.Author;
-            book.ISBN = bookDto.ISBN;
-            book.IsAvailable = bookDto.IsAvailable;
-
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!_context.Books.Any(e => e.Id == id))
-                {
-                    return Problem(
-                        detail: "Güncelleme sırasında çakışma oluştu. Kitap silinmiş olabilir.",
-                        statusCode: StatusCodes.Status404NotFound,
-                        title: "Kaynak Bulunamadı");
-                }
-                throw;
-            }
-
             return NoContent();
         }
 
-        // DELETE: api/books/{id} -> Kitap sil
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteBook(int id)
         {
-            var book = await _context.Books.FindAsync(id);
-            if (book == null)
+            var deleted = await _bookRepository.DeleteAsync(id);
+            if (!deleted)
             {
                 return Problem(
                     detail: $"Silinmek istenen Id={id} olan kitap bulunamadı.",
@@ -157,8 +126,6 @@ namespace Library.API.Controllers
                     title: "Kaynak Bulunamadı");
             }
 
-            _context.Books.Remove(book);
-            await _context.SaveChangesAsync();
             return NoContent();
         }
     }
