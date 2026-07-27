@@ -16,6 +16,8 @@ builder.Services.AddDbContext<LibraryDbContext>(options =>
 // Controller verilerine eriþimi soyutlamak için repository DI kaydý (DIP çözümü)
 builder.Services.AddScoped<IBookRepository, BookRepository>();
 builder.Services.AddScoped<IMemberRepository, MemberRepository>();
+builder.Services.AddScoped<IBorrowRepository, BorrowRepository>();
+builder.Services.AddScoped<IBorrowService, BorrowService>();
 
 // Business Servislerinin Eklenmesi (Dependency Injection)
 builder.Services.AddScoped<IPenaltyFeeCalculator, PenaltyFeeCalculator>();
