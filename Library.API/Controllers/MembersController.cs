@@ -15,19 +15,29 @@ namespace Library.API.Controllers
             _memberRepository = memberRepository;
         }
 
-        // GET: api/members -> Tüm üyeleri listele
+        // GET: api/members?page=1&pageSize=10 -> Sayfalanmış üye listesini getirir
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<MemberDto>>> GetMembers()
+        [ProducesResponseType(typeof(PagedResult<MemberDto>), StatusCodes.Status200OK)]
+        public async Task<IActionResult> GetMembers([FromQuery] int page = 1, [FromQuery] int pageSize = 10)
         {
-            var (members, _) = await _memberRepository.GetAllAsync(1, 1000);
+            if (page < 1) page = 1;
+            if (pageSize < 1) pageSize = 10;
 
-            var result = members.Select(m => new MemberDto
+            var (members, totalCount) = await _memberRepository.GetAllAsync(page, pageSize);
+
+            var result = new PagedResult<MemberDto>
             {
-                Id = m.Id,
-                FullName = m.FullName,
-                Email = m.Email,
-                MembershipDate = m.MembershipDate
-            }).ToList();
+                Items = members.Select(m => new MemberDto
+                {
+                    Id = m.Id,
+                    FullName = m.FullName,
+                    Email = m.Email,
+                    MembershipDate = m.MembershipDate
+                }).ToList(),
+                TotalCount = totalCount,
+                Page = page,
+                PageSize = pageSize
+            };
 
             return Ok(result);
         }
