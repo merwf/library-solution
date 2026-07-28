@@ -11,7 +11,8 @@ namespace LibrarySolution.Tests.Services
 
         public PenaltyFeeCalculatorTests()
         {
-            _calculator = new PenaltyFeeCalculator();
+            var settingProvider = new CountrySettingProvider();
+            _calculator = new PenaltyFeeCalculator(settingProvider);
         }
 
         // Türkiye için muafiyet sınırı (örn: ilk 3 gün) içindeki teslimlerde ceza tutarının 0 TRY olduğunu doğrular.

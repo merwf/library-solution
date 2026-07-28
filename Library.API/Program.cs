@@ -19,10 +19,12 @@ builder.Services.AddScoped<IBookRepository, BookRepository>();
 builder.Services.AddScoped<IMemberRepository, MemberRepository>();
 builder.Services.AddScoped<IBorrowRepository, BorrowRepository>();
 
-// --- BUSINESS SERVICE KAYITLARI (Yeni Eklenenler) ---
+// --- BUSINESS SERVICE KAYITLARI ---
 builder.Services.AddScoped<IBookService, BookService>();
 builder.Services.AddScoped<IMemberService, MemberService>();
 builder.Services.AddScoped<IBorrowService, BorrowService>();
+builder.Services.AddScoped<ICountrySettingProvider, CountrySettingProvider>();
+builder.Services.AddScoped<IPenaltyFeeCalculator, PenaltyFeeCalculator>();
 
 // --- CALCULATOR & CONFIG SERVÝSLERÝ ---
 builder.Services.AddScoped<IPenaltyFeeCalculator, PenaltyFeeCalculator>();

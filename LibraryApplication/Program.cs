@@ -1,5 +1,6 @@
 using Library.Business;
 using Library.Business.Concrete;
+using Library.Business.Interfaces;
 using Library.Core.DTOs;
 using System;
 
@@ -18,8 +19,14 @@ namespace LibraryApplication
             String fee = "";
             try
             {
-                // Calculate metodu artýk PenaltyResultDto dönüyor
-                PenaltyResultDto result = new PenaltyFeeCalculator().Calculate(args[0], args[1], args[2]);
+                // 1. Provider örneðini oluþturuyoruz
+                ICountrySettingProvider settingProvider = new CountrySettingProvider();
+
+                // 2. PenaltyFeeCalculator'a provider enjekte ediliyor (DIP)
+                IPenaltyFeeCalculator calculator = new PenaltyFeeCalculator(settingProvider);
+
+                // 3. Hesaplama yapýlýyor
+                PenaltyResultDto result = calculator.Calculate(args[0], args[1], args[2]);
 
                 // FormattedResult metnini alýyoruz (Örn: "5.25 TRY" ya da "Error: ...")
                 fee = result.FormattedResult;
