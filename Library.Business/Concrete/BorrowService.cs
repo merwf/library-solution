@@ -1,12 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Library.Business.Interfaces;
+﻿using Library.Business.Interfaces;
 using Library.Core.DTOs;
 using Library.Core.Entities;
 using Library.Data.Repositories.Interfaces;
+using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace Library.Business.Concrete
 {
@@ -69,16 +67,13 @@ namespace Library.Business.Concrete
                 MemberId = request.MemberId,
                 CountryCode = request.CountryCode,
                 BorrowDate = DateTime.Now,
-                DueDate = DateTime.Now.AddDays(10),
-                ReturnDate = null,
-                ComputedPenaltyFee = 0,
-                IsPenaltyPaid = false
+                DueDate = DateTime.Now.AddDays(10)
             };
 
-            // book.IsAvailable değişikliği tracked entity üzerinde yapılıyor,
-            // ayrı bir UpdateAsync çağrısına gerek yok — AddAsync'in
-            // SaveChangesAsync'i her iki değişikliği de TEK seferde kaydedecek.
-            book.IsAvailable = false;
+            // RICH DOMAIN MODEL:
+            // Doğrudan book.IsAvailable = false yazmak yerine kitabın kendi domain davranışını çağırıyoruz.
+            book.MarkAsBorrowed();
+
             await _borrowRepository.AddAsync(record);
 
             return new BorrowResultDto
@@ -114,8 +109,6 @@ namespace Library.Business.Concrete
             }
 
             DateTime returnDate = DateTime.Now;
-            record.ReturnDate = returnDate;
-
             string dueDateStr = record.DueDate.ToString("dd.MM.yyyy");
             string returnDateStr = returnDate.ToString("dd.MM.yyyy");
 
@@ -131,15 +124,10 @@ namespace Library.Business.Concrete
                 };
             }
 
-            if (penalty.Amount > 0)
-            {
-                record.ComputedPenaltyFee = penalty.Amount;
-            }
-
-            if (record.Book != null)
-            {
-                record.Book.IsAvailable = true;
-            }
+            // RICH DOMAIN MODEL:
+            // İade sürecini, ceza tutarını ve bağlı kitabın IsAvailable durumunu 
+            // BorrowRecord nesnesi içindeki CompleteReturn metodu ile yönetiyoruz.
+            record.CompleteReturn(returnDate, penalty.Amount);
 
             await _borrowRepository.SaveChangesAsync();
 

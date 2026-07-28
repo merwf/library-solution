@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace Library.Core.Entities
 {
@@ -8,9 +9,23 @@ namespace Library.Core.Entities
         public string Title { get; set; } = string.Empty;
         public string Author { get; set; } = string.Empty;
         public string ISBN { get; set; } = string.Empty;
+
+        // Diğer projelerden erişim için public set
         public bool IsAvailable { get; set; } = true;
 
-        // İlişki için Navigation Property
         public ICollection<BorrowRecord> BorrowRecords { get; set; } = new List<BorrowRecord>();
+
+        public void MarkAsBorrowed()
+        {
+            if (!IsAvailable)
+                throw new InvalidOperationException("Bu kitap zaten ödünç verilmiş durumda.");
+
+            IsAvailable = false;
+        }
+
+        public void MarkAsReturned()
+        {
+            IsAvailable = true;
+        }
     }
 }

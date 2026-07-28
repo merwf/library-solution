@@ -82,9 +82,13 @@ namespace Library.Business.Concrete
                 Id = bookDto.Id,
                 Title = bookDto.Title,
                 Author = bookDto.Author,
-                ISBN = bookDto.ISBN,
-                IsAvailable = bookDto.IsAvailable
+                ISBN = bookDto.ISBN
             };
+
+            if (bookDto.IsAvailable)
+                book.MarkAsReturned();
+            else
+                book.MarkAsBorrowed();
 
             return await _bookRepository.UpdateAsync(book);
         }

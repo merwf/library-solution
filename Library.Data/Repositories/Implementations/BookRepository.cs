@@ -50,7 +50,12 @@ namespace Library.Data.Repositories.Implementations
             existing.Title = book.Title;
             existing.Author = book.Author;
             existing.ISBN = book.ISBN;
-            existing.IsAvailable = book.IsAvailable;
+
+            // Doğrudan 'IsAvailable =' yazmak yerine domain metodunu çağırıyoruz:
+            if (book.IsAvailable)
+                existing.MarkAsReturned();
+            else
+                existing.MarkAsBorrowed();
 
             await _context.SaveChangesAsync();
             return true;
