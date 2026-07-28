@@ -16,7 +16,6 @@
     <ProjectReference Include="..\Library.Core\Library.Core.csproj" />
     <ProjectReference Include="..\Library.Data\Library.Data.csproj" />
     <ProjectReference Include="..\LibraryApplication\LibraryApplication.csproj" />
-    <ProjectReference Include="..\LibrarySolution.Tests\LibrarySolution.Tests.csproj" />
   </ItemGroup>
 
 </Project>
