@@ -1,7 +1,9 @@
-using Library.Data.Repositories;
-using Library.Business;
 using Library.Data;
 using Microsoft.EntityFrameworkCore;
+using Library.Business.Interfaces;
+using Library.Business.Concrete;
+using Library.Data.Repositories.Interfaces;
+using Library.Data.Repositories.Implementations;
 
 var builder = WebApplication.CreateBuilder(args);
 

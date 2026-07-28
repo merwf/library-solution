@@ -1,5 +1,6 @@
 using Library.Business;
-using Library.Core;
+using Library.Business.Concrete;
+using Library.Core.DTOs;
 using System;
 
 namespace LibraryApplication

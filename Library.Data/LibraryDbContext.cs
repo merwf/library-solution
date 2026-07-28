@@ -1,6 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using Library.Core;
 using LibraryConfigUtilities;
+using Library.Core.Entities;
 
 namespace Library.Data
 {

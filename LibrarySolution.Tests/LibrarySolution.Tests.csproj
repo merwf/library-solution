@@ -48,6 +48,11 @@
 			<Link>LibrarySolution.Tests.dll.config</Link>
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
+		<None Include="C:\Users\E.Merve\GitHub\LibrarySolution\LibrarySolution.Tests\.editorconfig" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <EditorConfigFiles Remove="C:\Users\E.Merve\GitHub\LibrarySolution\LibrarySolution.Tests\.editorconfig" />
 	</ItemGroup>
 
 </Project>

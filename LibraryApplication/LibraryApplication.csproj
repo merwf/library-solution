@@ -18,6 +18,11 @@
 	  <PackageReference Include="System.Configuration.ConfigurationManager" Version="8.0.1" />
 	</ItemGroup>
 	<ItemGroup>
+	  <Reference Include="LibraryConfigUtilities">
+	    <HintPath>..\..\..\Downloads\LibraryConfigUtilities.dll</HintPath>
+	  </Reference>
+	</ItemGroup>
+	<ItemGroup>
 	  <None Update="App.config">
 	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
 	  </None>

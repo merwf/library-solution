@@ -1,5 +1,5 @@
-﻿using Library.Business;
-using Library.Core;
+﻿using Library.Business.Interfaces;
+using Library.Core.DTOs;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Library.API.Controllers
