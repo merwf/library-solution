@@ -60,39 +60,96 @@ Proje, sorumlulukların net şekilde ayrıldığı bir **Layered Monolith (N-Tie
 ```
 LibrarySolution/
 │
-├── Library.Core/                  # Entity (Domain Model) ve DTO katmanı
-│   ├── Book.cs / BookDto.cs
-│   ├── Member.cs / MemberDto.cs
-│   └── BorrowRecord.cs / BorrowRecordDto.cs
+├── Library.Core/                    # Entity, DTO ve Ortak Modeller Katmanı
+│   ├── Common/                      # Genel amaçlı generic modeller
+│   │   └── PagedResult.cs           # Generic sayfalama (pagination) modeli
+│   ├── DTOs/                        # Veri Transfer Nesneleri
+│   │   ├── BookDto.cs
+│   │   ├── MemberDto.cs
+│   │   ├── BorrowRecordDto.cs
+│   │   ├── BorrowRequestDto.cs
+│   │   └── PenaltyResultDto.cs
+│   └── Entities/                    # Veritabanı Varlıkları (Domain Models)
+│       ├── Book.cs
+│       ├── Member.cs
+│       └── BorrowRecord.cs
 │
-├── Library.Business/              # İş kuralları / servis katmanı
-│   ├── IPenaltyFeeCalculator.cs   # Ceza hesaplama sözleşmesi (interface)
-│   └── PenaltyFeeCalculator.cs    # Ceza hesaplama iş mantığı (SRP)
+├── Library.Business/                # İş Mantığı ve Servis Katmanı
+│   ├── Concrete/                    # Somut İş Servisleri (Business Logics)
+│   │   ├── BookService.cs           # Kitap iş kuralları & mapping
+│   │   ├── MemberService.cs         # Üye iş kuralları & mapping
+│   │   ├── BorrowService.cs         # Ödünç alma / iade süreç mantığı
+│   │   └── PenaltyFeeCalculator.cs  # Ceza hesaplama algoritması (İş günleri/tatil hesabı)
+│   └── Interfaces/                  # İş Katmanı Sözleşmeleri (Abstraction)
+│       ├── IBookService.cs
+│       ├── IMemberService.cs
+│       ├── IBorrowService.cs
+│       └── IPenaltyFeeCalculator.cs
 │
-├── Library.Data/                  # Veri erişim katmanı (EF Core)
-│   └── LibraryDbContext.cs        # DbContext, ilişkiler, seed data
+├── Library.Data/                    # Veri Erişim Katmanı (EF Core & Repositories)
+│   ├── Implementations/             # Somut Repository Sınıfları
+│   │   ├── BookRepository.cs
+│   │   ├── MemberRepository.cs
+│   │   └── BorrowRepository.cs
+│   ├── Interfaces/                  # Veri Erişim Arayüzleri (Repository Contracts)
+│   │   ├── IBookRepository.cs
+│   │   ├── IMemberRepository.cs
+│   │   └── IBorrowRepository.cs
+│   └── LibraryDbContext.cs          # DbContext, EF Core ilişkileri ve Seed Data
 │
-├── Library.API/                   # Sunum / API katmanı
-│   └── Controllers/
-│       ├── BooksController.cs     # Kitap CRUD işlemleri
-│       ├── MembersController.cs   # Üye CRUD işlemleri
-│       ├── BorrowController.cs    # Ödünç alma / iade işlemleri
-│       └── PenaltyController.cs   # Ceza hesaplama endpoint'i
+├── Library.API/                     # Sunum / REST Web API Katmanı
+│   ├── Controllers/                 # Thin (İnce) Controller Sınıfları (Pure HTTP Management)
+│   │   ├── BooksController.cs       # Kitap endpoint'leri (IBookService bağımlılığı)
+│   │   ├── MembersController.cs     # Üye endpoint'leri (IMemberService bağımlılığı)
+│   │   ├── BorrowController.cs      # Ödünç / İade endpoint'leri (IBorrowService bağımlılığı)
+│   │   └── PenaltyController.cs     # Ceza hesaplama endpoint'i
+│   └── Program.cs                   # IoC Container (AddScoped kayıtları) & Pipeline
 │
-├── Library.UI/                    # Blazor Server yönetim paneli
-│   ├── Components/
-│   │   ├── Layout/                # MainLayout, NavMenu
-│   │   ├── Pages/                 # Home, Books, Members, Borrow, ActiveBorrows
-│   │   └── Shared/                # ToastContainer (bildirim bileşeni)
-│   └── Services/                  # BookService, MemberService, BorrowService, ToastService
+├── Library.UI/                      # Blazor Server Yönetim Paneli Katmanı
+│   ├── Components/                  # Blazor Bileşenleri (UI Components)
+│   │   ├── Layout/                  # Düzen Bileşenleri
+│   │   │   ├── MainLayout.razor
+│   │   │   ├── MainLayout.razor.css
+│   │   │   ├── NavMenu.razor
+│   │   │   └── NavMenu.razor.css
+│   │   ├── Pages/                   # Sayfa Bileşenleri
+│   │   │   ├── Home.razor
+│   │   │   ├── Books.razor
+│   │   │   ├── Members.razor
+│   │   │   ├── Borrow.razor
+│   │   │   ├── ActiveBorrows.razor
+│   │   │   └── Error.razor
+│   │   ├── Shared/                  # Ortak Kullanılan Bileşenler
+│   │   │   └── ToastContainer.razor # Bildirim/Toast bileşeni
+│   │   ├── App.razor
+│   │   ├── Routes.razor
+│   │   └── _Imports.razor
+│   └── HttpServices/                # UI HTTP İletişim Servisleri & Sözleşmeleri
+│       ├── IBookService.cs          # UI Kitap HTTP servis arayüzü
+│       ├── BookService.cs           # UI Kitap HTTP servis uygulaması (HttpClient)
+│       ├── IMemberService.cs        # UI Üye HTTP servis arayüzü
+│       ├── MemberService.cs         # UI Üye HTTP servis uygulaması (HttpClient)
+│       ├── IBorrowService.cs        # UI Ödünç HTTP servis arayüzü
+│       ├── BorrowService.cs         # UI Ödünç HTTP servis uygulaması (HttpClient)
+│       ├── IToastService.cs         # UI Bildirim servis arayüzü
+│       └── ToastService.cs          # UI Bildirim servis uygulaması
 │
-├── LibraryApplication/            # Konsol tabanlı bağımsız çalıştırma (Program.cs)
+├── LibraryApplication/              # Konsol Tabanlı Bağımsız Çalıştırma
 │   └── Program.cs
 │
-├── LibrarySolution.Tests/         # Birim testler
-│   └── PenaltyFeeCalculatorTests.cs
+├── LibrarySolution.Tests/           # xUnit & Moq Birim Test Katmanı
+│   ├── Controllers/                 # API Controller Test Sınıfları
+│   │   ├── BooksControllerTests.cs  # BooksController HTTP yanıt ve yönlendirme testleri
+│   │   └── BorrowControllerTests.cs # BorrowController HTTP yanıt testleri
+│   ├── Services/                    # Business Service ve Utility Test Sınıfları
+│   │   ├── BookServiceTests.cs      # BookService iş mantığı & pagination testleri
+│   │   ├── MemberServiceTests.cs    # MemberService iş mantığı testleri
+│   │   ├── BorrowServiceTests.cs    # BorrowService ödünç/iade iş kuralı testleri
+│   │   └── PenaltyFeeCalculatorTests.cs # Ceza hesaplama algoritması edge-case testleri
+│   ├── .editorconfig                # Kod standartları ve stil konfigürasyonu
+│   └── App.config                   # Test ortamı ülke bazlı ceza/tatil ayarları
 │
-└── App.config                     # Ülke bazlı ceza/tatil/hafta sonu konfigürasyonu
+└── App.config                       # Ülke bazlı ceza/tatil/hafta sonu konfigürasyonu
 ```
 
 ### Katmanlar Arası Bağımlılık Yönü
