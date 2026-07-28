@@ -1,5 +1,6 @@
 using Library.UI.Components;
-using Library.UI.Services;
+using Library.UI.HttpServices.Interfaces;
+using Library.UI.HttpServices.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 

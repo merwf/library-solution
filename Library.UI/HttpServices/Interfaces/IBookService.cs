@@ -3,7 +3,7 @@ using Library.Core.DTOs;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
-namespace Library.UI.Services
+namespace Library.UI.HttpServices.Interfaces
 {
     public interface IBookService
     {

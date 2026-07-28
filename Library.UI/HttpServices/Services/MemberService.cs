@@ -1,11 +1,12 @@
 ﻿using Library.Core.Common;
 using Library.Core.DTOs;
+using Library.UI.HttpServices.Interfaces;
 using System.Collections.Generic;
 using System.Net.Http;
 using System.Net.Http.Json;
 using System.Threading.Tasks;
 
-namespace Library.UI.Services
+namespace Library.UI.HttpServices.Services
 {
     public class MemberService : IMemberService
     {

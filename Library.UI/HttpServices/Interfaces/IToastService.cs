@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace Library.UI.Services
+namespace Library.UI.HttpServices.Interfaces
 {
     public enum ToastType
     {

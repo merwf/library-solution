@@ -1,6 +1,7 @@
 ﻿@implements IDisposable
 @inject IToastService ToastService
-@using Library.UI.Services
+@using Library.UI.HttpServices.Interfaces
+@using Library.UI.HttpServices.Services
 
 <div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 1080;">
     @foreach (var toast in ToastService.Messages.ToList())

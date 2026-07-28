@@ -1,9 +1,10 @@
-﻿using System;
+﻿using Library.UI.HttpServices.Interfaces;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace Library.UI.Services
+namespace Library.UI.HttpServices.Services
 {
     public class ToastService : IToastService
     {
