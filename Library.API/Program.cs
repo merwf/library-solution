@@ -8,18 +8,21 @@ var builder = WebApplication.CreateBuilder(args);
 // --- RFC 7807 ProblemDetails Servisi ---
 builder.Services.AddProblemDetails();
 
-// --- VERÝTABANI BAÐLANTISINI BURADA EKLÝYORUZ ---
+// --- VERÝTABANI BAÐLANTISI ---
 builder.Services.AddDbContext<LibraryDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
-// ------------------------------------------------
 
-// Controller verilerine eriþimi soyutlamak için repository DI kaydý (DIP çözümü)
+// --- REPOSITORY KAYITLARI (Data Layer) ---
 builder.Services.AddScoped<IBookRepository, BookRepository>();
 builder.Services.AddScoped<IMemberRepository, MemberRepository>();
 builder.Services.AddScoped<IBorrowRepository, BorrowRepository>();
+
+// --- BUSINESS SERVICE KAYITLARI (Yeni Eklenenler) ---
+builder.Services.AddScoped<IBookService, BookService>();
+builder.Services.AddScoped<IMemberService, MemberService>();
 builder.Services.AddScoped<IBorrowService, BorrowService>();
 
-// Business Servislerinin Eklenmesi (Dependency Injection)
+// --- CALCULATOR & CONFIG SERVÝSLERÝ ---
 builder.Services.AddScoped<IPenaltyFeeCalculator, PenaltyFeeCalculator>();
 
 builder.Services.AddControllers();
