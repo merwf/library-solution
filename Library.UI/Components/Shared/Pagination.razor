@@ -1,0 +1,48 @@
+﻿<div class="d-flex justify-content-between align-items-center mt-3">
+    <div>
+        <small class="text-muted">
+            Toplam <strong>@TotalCount</strong> kayıttan
+            Sayfa <strong>@CurrentPage</strong> / <strong>@TotalPages</strong> gösteriliyor.
+        </small>
+    </div>
+    <nav>
+        <ul class="pagination pagination-sm mb-0">
+            <!-- ÖNCEKİ -->
+            <li class="page-item @(CurrentPage <= 1 ? "disabled" : "")">
+                <button class="page-link" @onclick="() => ChangePage(CurrentPage - 1)" disabled="@(CurrentPage <= 1 || Disabled)">Önceki</button>
+            </li>
+
+            <!-- DİNAMİK SAYFA NUMARALARI -->
+            @for (int i = 1; i <= TotalPages; i++)
+            {
+                var pageNumber = i;
+                <li class="page-item @(CurrentPage == pageNumber ? "active" : "")">
+                    <button class="page-link" @onclick="() => ChangePage(pageNumber)" disabled="@Disabled">
+                        @pageNumber
+                    </button>
+                </li>
+            }
+
+            <!-- SONRAKİ -->
+            <li class="page-item @(CurrentPage >= TotalPages ? "disabled" : "")">
+                <button class="page-link" @onclick="() => ChangePage(CurrentPage + 1)" disabled="@(CurrentPage >= TotalPages || Disabled)">Sonraki</button>
+            </li>
+        </ul>
+    </nav>
+</div>
+
+@code {
+    [Parameter] public int CurrentPage { get; set; } = 1;
+    [Parameter] public int TotalPages { get; set; } = 1;
+    [Parameter] public int TotalCount { get; set; } = 0;
+    [Parameter] public bool Disabled { get; set; }
+    [Parameter] public EventCallback<int> OnPageChanged { get; set; }
+
+    private async Task ChangePage(int newPage)
+    {
+        if (newPage != CurrentPage && newPage >= 1 && newPage <= TotalPages)
+        {
+            await OnPageChanged.InvokeAsync(newPage);
+        }
+    }
+}

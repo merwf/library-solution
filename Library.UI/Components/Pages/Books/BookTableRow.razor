@@ -1,0 +1,66 @@
+﻿@using Library.Core.DTOs
+
+<tr>
+    <td>@Book.Id</td>
+    <td>
+        @if (IsEditing)
+        {
+            <input type="text" class="form-control form-control-sm" @bind="EditingBook.Title" />
+        }
+        else
+        {
+            @Book.Title
+        }
+    </td>
+    <td>
+        @if (IsEditing)
+        {
+            <input type="text" class="form-control form-control-sm" @bind="EditingBook.Author" />
+        }
+        else
+        {
+            @Book.Author
+        }
+    </td>
+    <td>
+        @if (IsEditing)
+        {
+            <input type="text" class="form-control form-control-sm" @bind="EditingBook.ISBN" />
+        }
+        else
+        {
+            @Book.ISBN
+        }
+    </td>
+    <td>
+        <span class="badge @(Book.IsAvailable ? "bg-success" : "bg-danger")">
+            @(Book.IsAvailable ? "Mevcut" : "Ödünçte")
+        </span>
+    </td>
+    <td>
+        @if (IsEditing)
+        {
+            <button class="btn btn-success btn-sm" @onclick="OnSave" disabled="@IsBusy">
+                @(IsBusy ? "Kaydediliyor..." : "Kaydet")
+            </button>
+            <button class="btn btn-secondary btn-sm" @onclick="OnCancelEdit" disabled="@IsBusy">İptal</button>
+        }
+        else
+        {
+            <button class="btn btn-warning btn-sm" @onclick="OnStartEdit" disabled="@IsBusy">Düzenle</button>
+            <button class="btn btn-danger btn-sm" @onclick="OnPromptDelete" disabled="@IsBusy">Sil</button>
+        }
+    </td>
+</tr>
+
+@code {
+    [Parameter, EditorRequired] public BookDto Book { get; set; } = default!;
+    [Parameter, EditorRequired] public BookDto EditingBook { get; set; } = default!;
+    [Parameter] public bool IsEditing { get; set; }
+    [Parameter] public bool IsBusy { get; set; }
+
+    [Parameter] public EventCallback OnStartEdit { get; set; }
+    [Parameter] public EventCallback OnCancelEdit { get; set; }
+    [Parameter] public EventCallback OnSave { get; set; }
+    [Parameter] public EventCallback OnPromptDelete { get; set; }
+}

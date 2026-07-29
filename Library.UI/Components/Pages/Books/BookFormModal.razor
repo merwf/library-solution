@@ -1,0 +1,53 @@
+﻿@using Library.Core.DTOs
+
+@if (IsOpen)
+{
+    <div class="modal fade show d-block" tabindex="-1" style="background: rgba(0,0,0,0.5);">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Yeni Kitap Ekle</h5>
+                    <button type="button" class="btn-close" @onclick="Close"></button>
+                </div>
+                <EditForm Model="BookModel" OnValidSubmit="Save">
+                    <DataAnnotationsValidator />
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label">Kitap Adı</label>
+                            <InputText class="form-control" @bind-Value="BookModel.Title" />
+                            <ValidationMessage For="() => BookModel.Title" class="text-danger" />
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Yazar</label>
+                            <InputText class="form-control" @bind-Value="BookModel.Author" />
+                            <ValidationMessage For="() => BookModel.Author" class="text-danger" />
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">ISBN</label>
+                            <InputText class="form-control" @bind-Value="BookModel.ISBN" />
+                            <ValidationMessage For="() => BookModel.ISBN" class="text-danger" />
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" @onclick="Close" disabled="@IsBusy">Vazgeç</button>
+                        <button type="submit" class="btn btn-primary" disabled="@IsBusy">
+                            @(IsBusy ? "Ekleniyor..." : "Ekle")
+                        </button>
+                    </div>
+                </EditForm>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public bool IsOpen { get; set; }
+    [Parameter, EditorRequired] public BookDto BookModel { get; set; } = default!;
+    [Parameter] public bool IsBusy { get; set; }
+
+    [Parameter] public EventCallback OnSubmit { get; set; }
+    [Parameter] public EventCallback OnClose { get; set; }
+
+    private async Task Save() => await OnSubmit.InvokeAsync();
+    private async Task Close() => await OnClose.InvokeAsync();
+}

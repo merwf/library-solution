@@ -1,0 +1,47 @@
+﻿<div class="input-group">
+    <input type="text"
+           class="form-control"
+           placeholder="@Placeholder"
+           value="@SearchTerm"
+           @oninput="OnInputChanged"
+           @keyup.enter="TriggerSearch"
+           disabled="@Disabled" />
+
+    <button class="btn btn-outline-secondary" type="button" @onclick="TriggerSearch" disabled="@Disabled">
+        Ara
+    </button>
+
+    @if (!string.IsNullOrWhiteSpace(SearchTerm))
+    {
+        <button class="btn btn-outline-danger" type="button" @onclick="ClearSearch" disabled="@Disabled">
+            Temizle
+        </button>
+    }
+</div>
+
+@code {
+    [Parameter] public string? SearchTerm { get; set; }
+    [Parameter] public EventCallback<string?> SearchTermChanged { get; set; }
+    [Parameter] public EventCallback OnSearch { get; set; }
+    [Parameter] public EventCallback OnClear { get; set; }
+    [Parameter] public string Placeholder { get; set; } = "Ara...";
+    [Parameter] public bool Disabled { get; set; }
+
+    private async Task OnInputChanged(ChangeEventArgs e)
+    {
+        SearchTerm = e.Value?.ToString();
+        await SearchTermChanged.InvokeAsync(SearchTerm);
+    }
+
+    private async Task TriggerSearch()
+    {
+        await OnSearch.InvokeAsync();
+    }
+
+    private async Task ClearSearch()
+    {
+        SearchTerm = null;
+        await SearchTermChanged.InvokeAsync(null);
+        await OnClear.InvokeAsync();
+    }
+}

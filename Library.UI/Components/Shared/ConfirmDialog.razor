@@ -1,0 +1,37 @@
+﻿@if (IsOpen)
+{
+    <div class="modal fade show d-block" tabindex="-1" style="background: rgba(0,0,0,0.5);">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title">@Title</h5>
+                    <button type="button" class="btn-close" @onclick="Cancel"></button>
+                </div>
+                <div class="modal-body">
+                    <p>@Message</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" @onclick="Cancel" disabled="@IsBusy">Vazgeç</button>
+                    <button type="button" class="btn btn-danger" @onclick="Confirm" disabled="@IsBusy">
+                        @(IsBusy? BusyText : ConfirmButtonText)
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public bool IsOpen { get; set; }
+    [Parameter] public string Title { get; set; } = "Onay";
+    [Parameter] public string Message { get; set; } = "Bu işlemi gerçekleştirmek istediğinize emin misiniz?";
+    [Parameter] public string ConfirmButtonText { get; set; } = "Evet, Sil";
+    [Parameter] public string BusyText { get; set; } = "İşleniyor...";
+    [Parameter] public bool IsBusy { get; set; }
+
+    [Parameter] public EventCallback OnConfirm { get; set; }
+    [Parameter] public EventCallback OnCancel { get; set; }
+
+    private async Task Confirm() => await OnConfirm.InvokeAsync();
+    private async Task Cancel() => await OnCancel.InvokeAsync();
+}
