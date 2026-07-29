@@ -18,12 +18,19 @@ namespace Library.UI.HttpServices.Services
             _http = http;
         }
 
-        public async Task<PagedResult<BookDto>> GetBooksAsync(int page = 1, int pageSize = 10)
+        public async Task<PagedResult<BookDto>> GetBooksAsync(string? search = null, int page = 1, int pageSize = 10)
         {
+            var url = $"api/books?page={page}&pageSize={pageSize}";
+
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                url += $"&search={Uri.EscapeDataString(search)}";
+            }
+
             // Not: Hata burada yutulmuyor. API'ye ulaşılamazsa exception sayfaya (Books.razor)
             // gider; sayfa bunu yakalayıp kullanıcıya anlamlı bir hata mesajı gösterir.
             // Aksi halde "liste boş" ile "API'ye ulaşılamadı" durumları ayırt edilemezdi.
-            return await _http.GetFromJsonAsync<PagedResult<BookDto>>($"api/books?page={page}&pageSize={pageSize}") 
+            return await _http.GetFromJsonAsync<PagedResult<BookDto>>(url)
                 ?? new PagedResult<BookDto>();
         }
 

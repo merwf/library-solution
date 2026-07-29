@@ -13,6 +13,21 @@
         <button class="btn btn-primary" @onclick="OpenAddModal" disabled="@isBusy">Yeni Kitap Ekle</button>
     </div>
 
+    <!-- ARAMA FİLTRESİ -->
+    <div class="row mb-3">
+        <div class="col-md-6">
+            <div class="input-group">
+                <input type="text" class="form-control" placeholder="Başlık veya Yazar ile ara..."
+                       @bind="searchTerm" @bind:event="oninput" @keyup.enter="HandleSearch" />
+                <button class="btn btn-outline-secondary" type="button" @onclick="HandleSearch" disabled="@isBusy">Ara</button>
+                @if (!string.IsNullOrWhiteSpace(searchTerm))
+                {
+                    <button class="btn btn-outline-danger" type="button" @onclick="ClearSearch" disabled="@isBusy">Temizle</button>
+                }
+            </div>
+        </div>
+    </div>
+
     @if (isLoading)
     {
         <div class="d-flex justify-content-center align-items-center gap-2 py-4">
@@ -199,6 +214,7 @@
 
     private int currentPage = 1;
     private int pageSize = 5;
+    private string? searchTerm;
 
     private BookDto newBook = new();
     private BookDto editingBook = new();
@@ -223,10 +239,8 @@
         loadError = null;
         try
         {
-            // API'den gelen PagedResult objesini alıyoruz
-            pagedResult = await BookService.GetBooksAsync(currentPage, pageSize);
-
-            // DİKKAT: 'books' listesine PagedResult'ın kendisini değil, İÇİNDEKİ Items listesini atıyoruz!
+            // API'den gelen PagedResult objesini search parametresi ile alıyoruz
+            pagedResult = await BookService.GetBooksAsync(searchTerm, currentPage, pageSize);
             books = pagedResult.Items;
         }
         catch (Exception)
@@ -241,7 +255,19 @@
         }
     }
 
-    // Sayfalama butonları için metodlar
+    private async Task HandleSearch()
+    {
+        currentPage = 1; // Arama yapıldığında 1. sayfaya dön
+        await RefreshList();
+    }
+
+    private async Task ClearSearch()
+    {
+        searchTerm = null;
+        currentPage = 1;
+        await RefreshList();
+    }
+
     private async Task NextPage()
     {
         if (currentPage < pagedResult.TotalPages)
