@@ -18,9 +18,9 @@ namespace Library.API.Controllers
 
         [HttpGet]
         [ProducesResponseType(typeof(PagedResult<BookDto>), StatusCodes.Status200OK)]
-        public async Task<IActionResult> GetBooks([FromQuery] int page = 1, [FromQuery] int pageSize = 10)
+        public async Task<IActionResult> GetBooks([FromQuery] string? search, [FromQuery] int page = 1, [FromQuery] int pageSize = 10)
         {
-            var result = await _bookService.GetBooksAsync(page, pageSize);
+            var result = await _bookService.GetBooksAsync(search, page, pageSize);
             return Ok(result);
         }
 
