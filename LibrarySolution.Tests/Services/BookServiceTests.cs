@@ -1,7 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Threading.Tasks;
 using Library.Business.Concrete;
-using Library.Core;
 using Library.Core.DTOs;
 using Library.Core.Entities;
 using Library.Data.Repositories.Interfaces;
@@ -31,18 +30,40 @@ namespace LibrarySolution.Tests.Services
                 new Book { Id = 2, Title = "Refactoring", Author = "Martin Fowler", ISBN = "456", IsAvailable = false }
             };
 
-            _bookRepoMock.Setup(r => r.GetAllAsync(1, 10))
+            _bookRepoMock.Setup(r => r.GetAllAsync(null, 1, 10))
                          .ReturnsAsync((books, 2));
 
             // Act
-            var result = await _sut.GetBooksAsync(1, 10);
+            var result = await _sut.GetBooksAsync(null, 1, 10);
 
             // Assert
             Assert.NotNull(result);
             Assert.Equal(2, result.TotalCount);
             Assert.Equal(2, result.Items.Count);
             Assert.Equal("Clean Code", result.Items[0].Title);
-            _bookRepoMock.Verify(r => r.GetAllAsync(1, 10), Times.Once);
+            _bookRepoMock.Verify(r => r.GetAllAsync(null, 1, 10), Times.Once);
+        }
+
+        [Fact]
+        public async Task GetBooksAsync_WithSearchQuery_ReturnsFilteredResults()
+        {
+            // Arrange
+            var books = new List<Book>
+            {
+                new Book { Id = 1, Title = "Clean Code", Author = "Robert C. Martin", ISBN = "123", IsAvailable = true }
+            };
+
+            _bookRepoMock.Setup(r => r.GetAllAsync("clean", 1, 10))
+                         .ReturnsAsync((books, 1));
+
+            // Act
+            var result = await _sut.GetBooksAsync("clean", 1, 10);
+
+            // Assert
+            Assert.NotNull(result);
+            Assert.Equal(1, result.TotalCount);
+            Assert.Single(result.Items);
+            _bookRepoMock.Verify(r => r.GetAllAsync("clean", 1, 10), Times.Once);
         }
 
         [Fact]

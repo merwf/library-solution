@@ -2,7 +2,6 @@
 using System.Threading.Tasks;
 using Library.API.Controllers;
 using Library.Business.Interfaces;
-using Library.Core;
 using Library.Core.Common;
 using Library.Core.DTOs;
 using Microsoft.AspNetCore.Mvc;
@@ -27,10 +26,10 @@ namespace LibrarySolution.Tests.Controllers
         {
             // Arrange
             var pagedResult = new PagedResult<BookDto> { TotalCount = 1, Items = new List<BookDto> { new BookDto { Id = 1, Title = "Test" } } };
-            _bookServiceMock.Setup(s => s.GetBooksAsync(1, 10)).ReturnsAsync(pagedResult);
+            _bookServiceMock.Setup(s => s.GetBooksAsync(null, 1, 10)).ReturnsAsync(pagedResult);
 
             // Act
-            var actionResult = await _sut.GetBooks(1, 10);
+            var actionResult = await _sut.GetBooks(null, 1, 10);
 
             // Assert
             var okResult = Assert.IsType<OkObjectResult>(actionResult);
