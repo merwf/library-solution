@@ -9,7 +9,7 @@ namespace Library.Data.Repositories.Interfaces
 {
     public interface IBookRepository
     {
-        Task<(List<Book> Items, int TotalCount)> GetAllAsync(int page, int pageSize);
+        Task<(List<Book> Items, int TotalCount)> GetAllAsync(string? search, int page, int pageSize);
         Task<Book?> GetByIdAsync(int id);
         Task AddAsync(Book book);
         Task<bool> UpdateAsync(Book book);

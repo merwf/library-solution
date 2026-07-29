@@ -20,23 +20,22 @@ namespace Library.Business.Concrete
             _bookRepository = bookRepository;
         }
 
-        public async Task<PagedResult<BookDto>> GetBooksAsync(int page, int pageSize)
+        public async Task<PagedResult<BookDto>> GetBooksAsync(string? search, int page, int pageSize)
         {
-            if (page < 1) page = 1;
-            if (pageSize < 1) pageSize = 10;
+            var (items, totalCount) = await _bookRepository.GetAllAsync(search, page, pageSize);
 
-            var (books, totalCount) = await _bookRepository.GetAllAsync(page, pageSize);
+            var dtos = items.Select(b => new BookDto
+            {
+                Id = b.Id,
+                Title = b.Title,
+                Author = b.Author,
+                ISBN = b.ISBN,
+                IsAvailable = b.IsAvailable
+            }).ToList();
 
             return new PagedResult<BookDto>
             {
-                Items = books.Select(b => new BookDto
-                {
-                    Id = b.Id,
-                    Title = b.Title,
-                    Author = b.Author,
-                    ISBN = b.ISBN,
-                    IsAvailable = b.IsAvailable
-                }).ToList(),
+                Items = dtos,
                 TotalCount = totalCount,
                 Page = page,
                 PageSize = pageSize

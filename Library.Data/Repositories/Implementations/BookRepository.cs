@@ -18,11 +18,24 @@ namespace Library.Data.Repositories.Implementations
             _context = context;
         }
 
-        public async Task<(List<Book> Items, int TotalCount)> GetAllAsync(int page, int pageSize)
+        public async Task<(List<Book> Items, int TotalCount)> GetAllAsync(string? search, int page, int pageSize)
         {
-            var totalCount = await _context.Books.CountAsync();
+            var query = _context.Books.AsQueryable();
 
-            var items = await _context.Books
+            // 1. Boş değilse Title veya Author üzerinde arama yap
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                var searchTerm = search.Trim();
+                query = query.Where(b => 
+                    EF.Functions.Like(b.Title, $"%{searchTerm}%") || 
+                    EF.Functions.Like(b.Author, $"%{searchTerm}%"));
+            }
+
+            // 2. Filtrelenmiş toplam kayıt sayısı (Arama sonucu yoksa 0 döner)
+            var totalCount = await query.CountAsync();
+
+            // 3. Pagination uygula
+            var items = await query
                 .OrderBy(b => b.Id)
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
